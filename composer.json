@@ -17,6 +17,7 @@
     "keywords": ["laravel", "wallet", "ledger", "balance", "transactions"],
     "require": {
         "php": "^8.0",
+        "ext-bcmath": "*",
         "illuminate/support": "^8.0|^9.0|^10.0|^11.0|^12.0|^13.0",
         "illuminate/database": "^8.0|^9.0|^10.0|^11.0|^12.0|^13.0",
         "illuminate/http": "^8.0|^9.0|^10.0|^11.0|^12.0|^13.0",

@@ -50,6 +50,15 @@ final class EloquentWalletRepository implements WalletRepository
         ])->first();
     }
 
+    public function findAllForHolder(string $holderType, int|string $holderId, string $walletName): array
+    {
+        return Wallet::query()->where([
+            'holder_type' => $holderType,
+            'holder_id' => $holderId,
+            'name' => $walletName,
+        ])->get()->all();
+    }
+
     public function lockForUpdate(int $walletId): Model
     {
         $wallet = Wallet::query()->lockForUpdate()->find($walletId);

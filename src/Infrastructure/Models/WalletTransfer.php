@@ -15,6 +15,7 @@ final class WalletTransfer extends Model
     protected $casts = [
         'amount' => 'integer',
         'fee' => 'integer',
+        'converted_amount' => 'integer',
     ];
 
     protected static function booted(): void

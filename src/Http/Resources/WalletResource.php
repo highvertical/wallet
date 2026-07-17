@@ -7,7 +7,6 @@ namespace Highvertical\Wallet\Http\Resources;
 use Highvertical\Wallet\Domain\Enums\HoldStatus;
 use Highvertical\Wallet\Domain\ValueObjects\Money;
 use Highvertical\Wallet\Infrastructure\Models\WalletHold;
-use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**

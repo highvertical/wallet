@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Highvertical\Wallet\Http\Requests;
 
+use Highvertical\Wallet\Http\Requests\Concerns\ValidatesMeta;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
@@ -12,13 +13,15 @@ use Illuminate\Foundation\Http\FormRequest;
  */
 final class AdjustBalanceRequest extends FormRequest
 {
+    use ValidatesMeta;
+
     public function rules(): array
     {
         return [
-            'amount' => ['required', 'regex:/^-?\d+(\.\d+)?$/'],
+            'amount' => ['required', 'string', 'max:32', 'regex:/^-?\d+(\.\d+)?$/'],
             'reason' => ['required', 'string', 'max:500'],
             'reference' => ['sometimes', 'string', 'max:255'],
-            'meta' => ['sometimes', 'array'],
+            'meta' => $this->metaRules(),
         ];
     }
 }

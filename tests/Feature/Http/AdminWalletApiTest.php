@@ -27,7 +27,7 @@ final class AdminWalletApiTest extends TestCase
         $user = $this->createUserWithRole('wallet-user');
 
         $this->actingAs($user, 'web')
-            ->postJson("/wallet/admin/wallets/{$wallet->getKey()}/freeze", ['reason' => 'fraud'])
+            ->postJson("/v1/wallet/admin/wallets/{$wallet->getKey()}/freeze", ['reason' => 'fraud'])
             ->assertStatus(403);
     }
 
@@ -38,12 +38,12 @@ final class AdminWalletApiTest extends TestCase
         $admin = $this->createUserWithRole('wallet-admin');
 
         $this->actingAs($admin, 'web')
-            ->postJson("/wallet/admin/wallets/{$wallet->getKey()}/freeze", ['reason' => 'fraud'])
+            ->postJson("/v1/wallet/admin/wallets/{$wallet->getKey()}/freeze", ['reason' => 'fraud'])
             ->assertStatus(200)
             ->assertJsonPath('data.status', 'frozen');
 
         $this->actingAs($admin, 'web')
-            ->postJson("/wallet/admin/wallets/{$wallet->getKey()}/unfreeze")
+            ->postJson("/v1/wallet/admin/wallets/{$wallet->getKey()}/unfreeze")
             ->assertStatus(200)
             ->assertJsonPath('data.status', 'active');
     }
@@ -55,7 +55,7 @@ final class AdminWalletApiTest extends TestCase
         $admin = $this->createUserWithRole('wallet-admin');
 
         $this->actingAs($admin, 'web')
-            ->postJson("/wallet/admin/wallets/{$wallet->getKey()}/adjust", [
+            ->postJson("/v1/wallet/admin/wallets/{$wallet->getKey()}/adjust", [
                 'amount' => '50.00',
                 'reason' => 'goodwill credit',
             ])
@@ -71,7 +71,7 @@ final class AdminWalletApiTest extends TestCase
         $admin = $this->createUserWithRole('wallet-admin');
 
         $holdResponse = $this->actingAs($admin, 'web')
-            ->postJson("/wallet/admin/wallets/{$wallet->getKey()}/holds", [
+            ->postJson("/v1/wallet/admin/wallets/{$wallet->getKey()}/holds", [
                 'amount' => '200.00',
                 'reason' => 'reserved for order #1',
             ])
@@ -80,7 +80,7 @@ final class AdminWalletApiTest extends TestCase
         $holdId = $holdResponse->json('data.id');
 
         $this->actingAs($admin, 'web')
-            ->postJson("/wallet/admin/holds/{$holdId}/capture", ['amount' => '150.00'])
+            ->postJson("/v1/wallet/admin/holds/{$holdId}/capture", ['amount' => '150.00'])
             ->assertStatus(200);
 
         $this->assertSame(85000, $wallet->fresh()->balance);
@@ -93,7 +93,7 @@ final class AdminWalletApiTest extends TestCase
         $admin = $this->createUserWithRole('wallet-admin');
 
         $holdResponse = $this->actingAs($admin, 'web')
-            ->postJson("/wallet/admin/wallets/{$wallet->getKey()}/holds", [
+            ->postJson("/v1/wallet/admin/wallets/{$wallet->getKey()}/holds", [
                 'amount' => '200.00',
                 'reason' => 'reserved for order #2',
             ]);
@@ -101,7 +101,7 @@ final class AdminWalletApiTest extends TestCase
         $holdId = $holdResponse->json('data.id');
 
         $this->actingAs($admin, 'web')
-            ->postJson("/wallet/admin/holds/{$holdId}/release")
+            ->postJson("/v1/wallet/admin/holds/{$holdId}/release")
             ->assertStatus(200)
             ->assertJsonPath('data.status', 'released');
     }
@@ -109,11 +109,11 @@ final class AdminWalletApiTest extends TestCase
     public function test_admin_can_reverse_a_transaction(): void
     {
         $owner = TestUser::create(['name' => 'Owner']);
-        $transaction = $this->app->make(WalletManager::class)->deposit(new DepositData(holder: $owner, amount: Money::fromDecimal('300.00', 'NGN')));
+        $transaction = $this->app->make(WalletManager::class)->deposit(new DepositData(holder: $owner, amount: Money::fromDecimal('300.00', 'NGN')))['transaction'];
         $admin = $this->createUserWithRole('wallet-admin');
 
         $this->actingAs($admin, 'web')
-            ->postJson("/wallet/admin/transactions/{$transaction->getKey()}/reverse", ['reason' => 'chargeback'])
+            ->postJson("/v1/wallet/admin/transactions/{$transaction->getKey()}/reverse", ['reason' => 'chargeback'])
             ->assertStatus(201);
 
         $this->assertSame(0, $owner->wallet()->fresh()->balance);
@@ -125,7 +125,7 @@ final class AdminWalletApiTest extends TestCase
         $wallet = $this->depositedWallet($owner);
 
         $this->actingAs($owner, 'web')
-            ->getJson("/wallet/admin/wallets/{$wallet->getKey()}")
+            ->getJson("/v1/wallet/admin/wallets/{$wallet->getKey()}")
             ->assertStatus(200);
     }
 
@@ -136,7 +136,7 @@ final class AdminWalletApiTest extends TestCase
         $stranger = $this->createUserWithRole('wallet-user');
 
         $this->actingAs($stranger, 'web')
-            ->getJson("/wallet/admin/wallets/{$wallet->getKey()}")
+            ->getJson("/v1/wallet/admin/wallets/{$wallet->getKey()}")
             ->assertStatus(403);
     }
 }

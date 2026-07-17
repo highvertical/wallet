@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Highvertical\Wallet\Application\Actions;
 
+use Highvertical\Wallet\Application\Services\CurrencyConverter;
 use Highvertical\Wallet\Application\Services\FeeResolver;
 use Highvertical\Wallet\Application\Services\LimitEnforcer;
 use Highvertical\Wallet\Application\Services\WalletLocker;
 use Highvertical\Wallet\Domain\Contracts\Walletable;
 use Highvertical\Wallet\Domain\Contracts\WalletRepository;
 use Highvertical\Wallet\Domain\Data\TransferData;
-use Highvertical\Wallet\Domain\Enums\HoldStatus;
 use Highvertical\Wallet\Domain\Enums\TransactionCategory;
 use Highvertical\Wallet\Domain\Enums\TransactionStatus;
 use Highvertical\Wallet\Domain\Enums\TransactionType;
@@ -36,7 +36,8 @@ final class TransferFundsAction
         private WalletRepository $wallets,
         private WalletLocker $locker,
         private FeeResolver $feeResolver,
-        private LimitEnforcer $limitEnforcer
+        private LimitEnforcer $limitEnforcer,
+        private CurrencyConverter $currencyConverter
     ) {
     }
 
@@ -73,12 +74,24 @@ final class TransferFundsAction
             $data->amount->currency()
         );
 
+        if ($toWallet === null && config('wallet.exchange.enabled', true)) {
+            $toWallet = $this->resolveCrossCurrencyRecipientWallet($data);
+        }
+
         if ($toWallet === null) {
             throw new CurrencyMismatchException('Recipient does not have a wallet in this currency.');
         }
 
         if ($fromWallet->getKey() === $toWallet->getKey()) {
             throw new InvalidAmountException('Cannot transfer to the same wallet.');
+        }
+
+        $rate = null;
+        $convertedAmount = $data->amount;
+
+        if ($fromWallet->currency !== $toWallet->currency) {
+            $rate = $this->currencyConverter->rate($fromWallet->currency, $toWallet->currency);
+            $convertedAmount = $data->amount->convertTo($toWallet->currency, $rate);
         }
 
         $reference = $data->reference ?? (string) Str::uuid();
@@ -104,13 +117,13 @@ final class TransferFundsAction
         $result = $this->locker->lockPair(
             $fromWallet->getKey(),
             $toWallet->getKey(),
-            function (Wallet $fromWallet, Wallet $toWallet) use ($data, $debitReference, $creditReference, $feeReference) {
+            function (Wallet $fromWallet, Wallet $toWallet) use ($data, $debitReference, $creditReference, $feeReference, $convertedAmount, $rate) {
                 if ($fromWallet->status !== WalletStatus::ACTIVE || $toWallet->status !== WalletStatus::ACTIVE) {
                     throw new WalletNotUsableException('Both wallets must be active to transfer funds.');
                 }
 
-                if ($fromWallet->currency !== $toWallet->currency || $fromWallet->currency !== strtoupper($data->amount->currency())) {
-                    throw new CurrencyMismatchException('Both wallets must share the transfer currency.');
+                if ($fromWallet->currency !== strtoupper($data->amount->currency())) {
+                    throw new CurrencyMismatchException('The sender wallet must match the transfer currency.');
                 }
 
                 $this->limitEnforcer->assertWithinLimit($fromWallet->getKey(), $data->amount, WalletOperation::TRANSFER);
@@ -120,7 +133,7 @@ final class TransferFundsAction
 
                 $heldMinorUnits = (int) WalletHold::query()
                     ->where('wallet_id', $fromWallet->getKey())
-                    ->where('status', HoldStatus::ACTIVE)
+                    ->active()
                     ->sum('amount');
 
                 $availableBalance = $fromWallet->balance - $heldMinorUnits;
@@ -130,7 +143,7 @@ final class TransferFundsAction
                     throw new InsufficientFundsException('Insufficient available balance to complete this transaction.');
                 }
 
-                if ($toWallet->max_balance !== null && ($toWallet->balance + $data->amount->minorUnits()) > $toWallet->max_balance) {
+                if ($toWallet->max_balance !== null && ($toWallet->balance + $convertedAmount->minorUnits()) > $toWallet->max_balance) {
                     throw new InvalidAmountException("This transfer would exceed the recipient wallet's maximum balance.");
                 }
 
@@ -207,13 +220,13 @@ final class TransferFundsAction
                 $fromWallet->save();
 
                 $toBalanceBefore = $toWallet->balance;
-                $toBalanceAfter = $toBalanceBefore + $data->amount->minorUnits();
+                $toBalanceAfter = $toBalanceBefore + $convertedAmount->minorUnits();
 
                 $creditTransaction = new WalletTransaction([
                     'wallet_id' => $toWallet->getKey(),
                     'type' => TransactionType::CREDIT,
                     'category' => TransactionCategory::TRANSFER_IN,
-                    'amount' => $data->amount->minorUnits(),
+                    'amount' => $convertedAmount->minorUnits(),
                     'reference' => $creditReference,
                     'status' => TransactionStatus::COMPLETED,
                     'description' => $data->note,
@@ -232,6 +245,8 @@ final class TransferFundsAction
                     'credit_transaction_id' => $creditTransaction->getKey(),
                     'amount' => $data->amount->minorUnits(),
                     'fee' => $fee->minorUnits(),
+                    'exchange_rate' => $rate,
+                    'converted_amount' => $rate !== null ? $convertedAmount->minorUnits() : null,
                     'status' => TransactionStatus::COMPLETED,
                     'note' => $data->note,
                 ]);
@@ -260,5 +275,42 @@ final class TransferFundsAction
             'credit_transaction' => $result['credit_transaction'],
             'fee_transaction' => $result['fee_transaction'],
         ];
+    }
+
+    /**
+     * Called only when the recipient has no wallet in the sender's exact
+     * transfer currency. If the sender named an explicit recipientCurrency,
+     * look that up directly. Otherwise inspect every currency variant the
+     * recipient already has under this wallet name: exactly one is used
+     * automatically, none preserves the existing "no wallet at all"
+     * exception, and more than one is rejected rather than guessed at -
+     * never auto-creates a wallet for the recipient.
+     */
+    private function resolveCrossCurrencyRecipientWallet(TransferData $data): ?Wallet
+    {
+        if ($data->recipientCurrency !== null) {
+            return $this->wallets->find(
+                $data->toHolder->getMorphClass(),
+                $data->toHolder->getKey(),
+                $data->walletName,
+                $data->recipientCurrency
+            );
+        }
+
+        $candidates = $this->wallets->findAllForHolder(
+            $data->toHolder->getMorphClass(),
+            $data->toHolder->getKey(),
+            $data->walletName
+        );
+
+        if (count($candidates) === 1) {
+            return $candidates[0];
+        }
+
+        if (count($candidates) > 1) {
+            throw new CurrencyMismatchException('Recipient has wallets in multiple currencies; specify recipient_currency.');
+        }
+
+        return null;
     }
 }

@@ -27,7 +27,7 @@ final class ReverseTransactionActionTest extends TestCase
 
         $manager = $this->app->make(WalletManager::class);
         $user = TestUser::create(['name' => 'Alice']);
-        $deposit = $manager->deposit(new DepositData(holder: $user, amount: Money::fromDecimal('500.00', 'NGN')));
+        $deposit = $manager->deposit(new DepositData(holder: $user, amount: Money::fromDecimal('500.00', 'NGN')))['transaction'];
 
         $reversal = $manager->reverseTransaction($deposit->getKey(), 'chargeback', 1);
 
@@ -55,7 +55,7 @@ final class ReverseTransactionActionTest extends TestCase
     {
         $manager = $this->app->make(WalletManager::class);
         $user = TestUser::create(['name' => 'Alice']);
-        $deposit = $manager->deposit(new DepositData(holder: $user, amount: Money::fromDecimal('500.00', 'NGN')));
+        $deposit = $manager->deposit(new DepositData(holder: $user, amount: Money::fromDecimal('500.00', 'NGN')))['transaction'];
         $manager->reverseTransaction($deposit->getKey(), 'chargeback', 1);
 
         $this->expectException(InvalidAmountException::class);

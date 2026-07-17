@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Highvertical\Wallet\Providers;
 
+use Highvertical\Wallet\Domain\Contracts\ExchangeRateProvider;
 use Highvertical\Wallet\Domain\Contracts\FeeCalculator;
 use Highvertical\Wallet\Domain\Contracts\LimitPolicy;
 use Highvertical\Wallet\Domain\Contracts\WalletRepository;
@@ -12,12 +13,17 @@ use Highvertical\Wallet\Events\LowBalanceDetected;
 use Highvertical\Wallet\Events\TransactionReversed;
 use Highvertical\Wallet\Events\WalletCredited;
 use Highvertical\Wallet\Events\WalletDebited;
+use Highvertical\Wallet\Console\Commands\ExpireHoldsCommand;
+use Highvertical\Wallet\Console\Commands\ReconcileLedgerCommand;
+use Highvertical\Wallet\Events\WalletBalanceReconciled;
 use Highvertical\Wallet\Events\WalletFrozen;
 use Highvertical\Wallet\Events\WalletHoldCaptured;
+use Highvertical\Wallet\Events\WalletHoldExpired;
 use Highvertical\Wallet\Events\WalletHoldPlaced;
 use Highvertical\Wallet\Events\WalletHoldReleased;
 use Highvertical\Wallet\Events\WalletTransferred;
 use Highvertical\Wallet\Events\WalletUnfrozen;
+use Highvertical\Wallet\Infrastructure\ExchangeRateProviders\HttpExchangeRateProvider;
 use Highvertical\Wallet\Infrastructure\FeeCalculators\ConfigDrivenFeeCalculator;
 use Highvertical\Wallet\Infrastructure\LimitPolicies\RollingWindowLimitPolicy;
 use Highvertical\Wallet\Infrastructure\Models\Wallet;
@@ -53,7 +59,9 @@ final class WalletServiceProvider extends ServiceProvider
         WalletHoldPlaced::class,
         WalletHoldReleased::class,
         WalletHoldCaptured::class,
+        WalletHoldExpired::class,
         TransactionReversed::class,
+        WalletBalanceReconciled::class,
     ];
 
     public function register(): void
@@ -63,6 +71,7 @@ final class WalletServiceProvider extends ServiceProvider
         $this->app->bind(WalletRepository::class, EloquentWalletRepository::class);
         $this->app->bind(FeeCalculator::class, ConfigDrivenFeeCalculator::class);
         $this->app->bind(LimitPolicy::class, RollingWindowLimitPolicy::class);
+        $this->app->bind(ExchangeRateProvider::class, HttpExchangeRateProvider::class);
     }
 
     public function boot(): void
@@ -78,6 +87,19 @@ final class WalletServiceProvider extends ServiceProvider
         $this->registerEventListeners();
         $this->registerPolicies();
         $this->registerExceptionRendering();
+        $this->registerCommands();
+    }
+
+    private function registerCommands(): void
+    {
+        if (! $this->app->runningInConsole()) {
+            return;
+        }
+
+        $this->commands([
+            ExpireHoldsCommand::class,
+            ReconcileLedgerCommand::class,
+        ]);
     }
 
     private function registerEventListeners(): void
@@ -121,7 +143,10 @@ final class WalletServiceProvider extends ServiceProvider
         }
 
         $handler->renderable(function (WalletException $exception, Request $request) {
-            if ($request->expectsJson() || $request->is('wallet/*')) {
+            $versionPrefix = trim((string) config('wallet.api_version_prefix', 'v1'), '/');
+            $walletPathPattern = $versionPrefix !== '' ? $versionPrefix.'/wallet/*' : 'wallet/*';
+
+            if ($request->expectsJson() || $request->is($walletPathPattern)) {
                 return response()->json(['message' => $exception->getMessage()], $exception->statusCode());
             }
         });

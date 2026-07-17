@@ -21,8 +21,10 @@ use Illuminate\Support\Facades\Route;
 | "view,transaction") via WalletPolicy / WalletTransactionPolicy.
 |
 */
+$versionPrefix = trim((string) config('wallet.api_version_prefix', 'v1'), '/');
+
 Route::middleware(['api', 'auth:'.config('wallet.auth_guard')])
-    ->prefix('wallet')
+    ->prefix($versionPrefix !== '' ? $versionPrefix.'/wallet' : 'wallet')
     ->name('wallet.')
     ->group(function () {
         Route::middleware(['throttle:wallet-user', 'can:wallet.view-own'])
@@ -81,7 +83,7 @@ Route::middleware(['api', 'auth:'.config('wallet.auth_guard')])
                     ->post('/holds/{hold}/release', [HoldController::class, 'release'])
                     ->name('holds.release');
 
-                Route::middleware('can:wallet.release-hold')
+                Route::middleware('can:wallet.capture-hold')
                     ->post('/holds/{hold}/capture', [HoldController::class, 'capture'])
                     ->name('holds.capture');
 

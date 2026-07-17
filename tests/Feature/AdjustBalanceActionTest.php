@@ -9,8 +9,10 @@ use Highvertical\Wallet\Domain\Data\AdjustmentData;
 use Highvertical\Wallet\Domain\Data\DepositData;
 use Highvertical\Wallet\Domain\Enums\TransactionCategory;
 use Highvertical\Wallet\Domain\Enums\TransactionType;
+use Highvertical\Wallet\Domain\Exceptions\CurrencyMismatchException;
 use Highvertical\Wallet\Domain\Exceptions\InsufficientFundsException;
 use Highvertical\Wallet\Domain\Exceptions\InvalidAmountException;
+use Highvertical\Wallet\Domain\Exceptions\WalletNotUsableException;
 use Highvertical\Wallet\Domain\ValueObjects\Money;
 use Highvertical\Wallet\Events\WalletCredited;
 use Highvertical\Wallet\Events\WalletDebited;
@@ -109,6 +111,62 @@ final class AdjustBalanceActionTest extends TestCase
         $manager->adjustBalance(new AdjustmentData(
             walletId: $wallet->getKey(),
             amount: Money::fromDecimal('100.00', 'NGN'),
+            reason: 'goodwill credit',
+            initiatedBy: 7,
+        ));
+    }
+
+    public function test_adjustment_with_the_same_reference_is_idempotent(): void
+    {
+        $manager = $this->app->make(WalletManager::class);
+        $wallet = $this->fundedWallet($manager, '100.00');
+
+        $first = $manager->adjustBalance(new AdjustmentData(
+            walletId: $wallet->getKey(),
+            amount: Money::fromDecimal('50.00', 'NGN'),
+            reason: 'goodwill credit',
+            initiatedBy: 7,
+            reference: 'adj-fixed-ref',
+        ));
+
+        $second = $manager->adjustBalance(new AdjustmentData(
+            walletId: $wallet->getKey(),
+            amount: Money::fromDecimal('50.00', 'NGN'),
+            reason: 'goodwill credit',
+            initiatedBy: 7,
+            reference: 'adj-fixed-ref',
+        ));
+
+        $this->assertSame($first->getKey(), $second->getKey());
+        $this->assertSame(15000, $wallet->fresh()->balance);
+    }
+
+    public function test_adjustment_is_rejected_on_a_frozen_wallet(): void
+    {
+        $manager = $this->app->make(WalletManager::class);
+        $wallet = $this->fundedWallet($manager, '100.00');
+        $manager->freeze($wallet->getKey(), 'suspicious activity', 1);
+
+        $this->expectException(WalletNotUsableException::class);
+
+        $manager->adjustBalance(new AdjustmentData(
+            walletId: $wallet->getKey(),
+            amount: Money::fromDecimal('50.00', 'NGN'),
+            reason: 'goodwill credit',
+            initiatedBy: 7,
+        ));
+    }
+
+    public function test_adjustment_with_a_currency_that_does_not_match_the_wallet_is_rejected(): void
+    {
+        $manager = $this->app->make(WalletManager::class);
+        $wallet = $this->fundedWallet($manager, '100.00');
+
+        $this->expectException(CurrencyMismatchException::class);
+
+        $manager->adjustBalance(new AdjustmentData(
+            walletId: $wallet->getKey(),
+            amount: Money::fromDecimal('50.00', 'USD'),
             reason: 'goodwill credit',
             initiatedBy: 7,
         ));

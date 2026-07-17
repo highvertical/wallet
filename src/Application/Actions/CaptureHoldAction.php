@@ -9,7 +9,10 @@ use Highvertical\Wallet\Domain\Enums\HoldStatus;
 use Highvertical\Wallet\Domain\Enums\TransactionCategory;
 use Highvertical\Wallet\Domain\Enums\TransactionStatus;
 use Highvertical\Wallet\Domain\Enums\TransactionType;
+use Highvertical\Wallet\Domain\Enums\WalletStatus;
+use Highvertical\Wallet\Domain\Exceptions\CurrencyMismatchException;
 use Highvertical\Wallet\Domain\Exceptions\InvalidAmountException;
+use Highvertical\Wallet\Domain\Exceptions\WalletNotUsableException;
 use Highvertical\Wallet\Domain\ValueObjects\Money;
 use Highvertical\Wallet\Events\WalletHoldCaptured;
 use Highvertical\Wallet\Infrastructure\Models\Wallet;
@@ -38,7 +41,31 @@ final class CaptureHoldAction
             $hold = WalletHold::query()->lockForUpdate()->findOrFail($holdId);
 
             if ($hold->status !== HoldStatus::ACTIVE) {
+                // A retry of an already-captured hold with the same (or
+                // unspecified, meaning "full amount") requested amount
+                // replays the original result instead of erroring - a
+                // genuinely different requested amount is still a conflict.
+                if ($hold->status === HoldStatus::CAPTURED) {
+                    $existingTransaction = WalletTransaction::query()
+                        ->where('reference', $hold->uuid.'-capture')
+                        ->first();
+
+                    if ($existingTransaction !== null
+                        && ($amount === null || $amount->minorUnits() === $existingTransaction->amount)
+                    ) {
+                        return ['hold' => $hold, 'transaction' => $existingTransaction, 'replayed' => true];
+                    }
+                }
+
                 throw new InvalidAmountException('This hold is no longer active.');
+            }
+
+            if ($wallet->status !== WalletStatus::ACTIVE) {
+                throw new WalletNotUsableException('This wallet is not currently usable.');
+            }
+
+            if ($amount !== null && $wallet->currency !== strtoupper($amount->currency())) {
+                throw new CurrencyMismatchException('The capture currency does not match the wallet currency.');
             }
 
             $captureMinorUnits = $amount?->minorUnits() ?? $hold->amount;
@@ -70,11 +97,13 @@ final class CaptureHoldAction
             $hold->capture_transaction_id = $transaction->getKey();
             $hold->save();
 
-            return ['hold' => $hold, 'transaction' => $transaction];
+            return ['hold' => $hold, 'transaction' => $transaction, 'replayed' => false];
         });
 
-        event(new WalletHoldCaptured($result['hold'], $result['transaction']));
+        if (! $result['replayed']) {
+            event(new WalletHoldCaptured($result['hold'], $result['transaction']));
+        }
 
-        return $result;
+        return ['hold' => $result['hold'], 'transaction' => $result['transaction']];
     }
 }

@@ -223,6 +223,10 @@ $app->bind(
     Highvertical\Wallet\Domain\Contracts\LimitPolicy::class,
     Highvertical\Wallet\Infrastructure\LimitPolicies\RollingWindowLimitPolicy::class
 );
+$app->bind(
+    Highvertical\Wallet\Domain\Contracts\ExchangeRateProvider::class,
+    Highvertical\Wallet\Infrastructure\ExchangeRateProviders\HttpExchangeRateProvider::class
+);
 
 // WalletManager is what the Controllers ask the container for.
 $app->singleton(Highvertical\Wallet\Application\WalletManager::class, function ($app) {
@@ -230,18 +234,21 @@ $app->singleton(Highvertical\Wallet\Application\WalletManager::class, function (
     $locker = new Highvertical\Wallet\Application\Services\WalletLocker($repo);
     $feeResolver = new Highvertical\Wallet\Application\Services\FeeResolver($app->make(Highvertical\Wallet\Domain\Contracts\FeeCalculator::class));
     $limitEnforcer = new Highvertical\Wallet\Application\Services\LimitEnforcer($app->make(Highvertical\Wallet\Domain\Contracts\LimitPolicy::class));
+    $currencyConverter = new Highvertical\Wallet\Application\Services\CurrencyConverter($app->make(Highvertical\Wallet\Domain\Contracts\ExchangeRateProvider::class));
 
     return new Highvertical\Wallet\Application\WalletManager(
-        new Highvertical\Wallet\Application\Actions\DepositFundsAction($repo, $locker, $limitEnforcer),
+        new Highvertical\Wallet\Application\Actions\DepositFundsAction($repo, $locker, $feeResolver, $limitEnforcer),
         new Highvertical\Wallet\Application\Actions\WithdrawFundsAction($repo, $locker, $feeResolver, $limitEnforcer),
-        new Highvertical\Wallet\Application\Actions\TransferFundsAction($repo, $locker, $feeResolver, $limitEnforcer),
+        new Highvertical\Wallet\Application\Actions\TransferFundsAction($repo, $locker, $feeResolver, $limitEnforcer, $currencyConverter),
         new Highvertical\Wallet\Application\Actions\PlaceHoldAction($locker),
         new Highvertical\Wallet\Application\Actions\ReleaseHoldAction($locker),
         new Highvertical\Wallet\Application\Actions\CaptureHoldAction($locker),
         new Highvertical\Wallet\Application\Actions\ReverseTransactionAction($locker),
         new Highvertical\Wallet\Application\Actions\FreezeWalletAction($locker),
         new Highvertical\Wallet\Application\Actions\UnfreezeWalletAction($locker),
-        new Highvertical\Wallet\Application\Actions\AdjustBalanceAction($locker)
+        new Highvertical\Wallet\Application\Actions\AdjustBalanceAction($locker),
+        new Highvertical\Wallet\Application\Actions\ExpireHoldsAction($locker),
+        new Highvertical\Wallet\Application\Actions\ReconcileWalletLedgerAction($locker)
     );
 });
 
@@ -384,24 +391,24 @@ $rateUser = TestUser::create(['name' => 'RateTester']);
 
 grant($alice, ['wallet.view-own', 'wallet.deposit', 'wallet.withdraw', 'wallet.transfer', 'wallet.view-transactions', 'wallet.export-report']);
 grant($bob, ['wallet.view-own', 'wallet.deposit', 'wallet.withdraw', 'wallet.transfer', 'wallet.view-transactions']);
-grant($admin, ['wallet.view-all', 'wallet.freeze', 'wallet.unfreeze', 'wallet.adjust-balance', 'wallet.place-hold', 'wallet.release-hold', 'wallet.reverse-transaction']);
+grant($admin, ['wallet.view-all', 'wallet.freeze', 'wallet.unfreeze', 'wallet.adjust-balance', 'wallet.place-hold', 'wallet.release-hold', 'wallet.capture-hold', 'wallet.reverse-transaction']);
 grant($rateUser, ['wallet.view-own']);
 
 // ============================================================
 // 1. Authentication
 // ============================================================
 echo "\n--- Authentication ---\n";
-assertStatus(request('GET', '/wallet'), 401, 'unauthenticated request to a protected route is rejected');
-assertStatus(request('GET', '/wallet', [], $alice), 200, 'authenticated request with wallet.view-own succeeds');
+assertStatus(request('GET', '/v1/wallet'), 401, 'unauthenticated request to a protected route is rejected');
+assertStatus(request('GET', '/v1/wallet', [], $alice), 200, 'authenticated request with wallet.view-own succeeds');
 
 // ============================================================
 // 2. Self-service: deposit / withdraw / validation
 // ============================================================
 echo "\n--- Self-service deposit/withdraw ---\n";
-$res = request('POST', '/wallet/deposit', ['amount' => '100.00', 'currency' => 'NGN'], $alice);
+$res = request('POST', '/v1/wallet/deposit', ['amount' => '100.00', 'currency' => 'NGN'], $alice);
 assertStatus($res, 201, 'deposit as authorized user returns 201 (JsonResource wraps a freshly-created model)');
 $body = json($res);
-if (($body['data']['amount'] ?? null) === '100.00' && ($body['data']['type'] ?? null) === 'credit') {
+if (($body['transaction']['amount'] ?? null) === '100.00' && ($body['transaction']['type'] ?? null) === 'credit') {
     pass('deposit response resource has correct amount/type');
 } else {
     fail('deposit response shape wrong', json_encode($body));
@@ -413,7 +420,7 @@ if ($aliceWallet && $aliceWallet->balance === 10000) {
     fail('deposit balance mismatch', (string) ($aliceWallet->balance ?? 'null'));
 }
 
-$res = request('POST', '/wallet/withdraw', ['amount' => '30.00', 'currency' => 'NGN'], $alice);
+$res = request('POST', '/v1/wallet/withdraw', ['amount' => '30.00', 'currency' => 'NGN'], $alice);
 assertStatus($res, 200, 'withdraw as authorized user returns 200');
 $aliceWallet->refresh();
 if ($aliceWallet->balance === 7000) {
@@ -422,10 +429,10 @@ if ($aliceWallet->balance === 7000) {
     fail('withdraw balance mismatch', (string) $aliceWallet->balance);
 }
 
-$res = request('POST', '/wallet/deposit', ['amount' => 'not-a-number', 'currency' => 'NGN'], $alice);
+$res = request('POST', '/v1/wallet/deposit', ['amount' => 'not-a-number', 'currency' => 'NGN'], $alice);
 assertStatus($res, 422, 'malformed amount fails Form Request validation with 422');
 
-$res = request('POST', '/wallet/withdraw', ['amount' => '999999.00', 'currency' => 'NGN'], $alice);
+$res = request('POST', '/v1/wallet/withdraw', ['amount' => '999999.00', 'currency' => 'NGN'], $alice);
 assertStatus($res, 402, 'withdrawing beyond balance renders InsufficientFundsException as 402 via registerExceptionRendering()');
 if ((json($res)['message'] ?? '') !== '') {
     pass('WalletException JSON body carries a message');
@@ -435,16 +442,16 @@ if ((json($res)['message'] ?? '') !== '') {
 
 // Permission enforcement: strip withdraw permission and confirm 403.
 grant($alice, ['wallet.view-own', 'wallet.deposit', 'wallet.transfer', 'wallet.view-transactions', 'wallet.export-report']);
-assertStatus(request('POST', '/wallet/withdraw', ['amount' => '1.00', 'currency' => 'NGN'], $alice), 403, 'removing wallet.withdraw permission is enforced by the can: route middleware');
+assertStatus(request('POST', '/v1/wallet/withdraw', ['amount' => '1.00', 'currency' => 'NGN'], $alice), 403, 'removing wallet.withdraw permission is enforced by the can: route middleware');
 grant($alice, ['wallet.view-own', 'wallet.deposit', 'wallet.withdraw', 'wallet.transfer', 'wallet.view-transactions', 'wallet.export-report']);
 
 // ============================================================
 // 3. Transfer (self-type default + morph map + rejection of unknown types)
 // ============================================================
 echo "\n--- Transfer ---\n";
-request('POST', '/wallet/deposit', ['amount' => '1.00', 'currency' => 'NGN'], $bob); // give Bob an NGN wallet
+request('POST', '/v1/wallet/deposit', ['amount' => '1.00', 'currency' => 'NGN'], $bob); // give Bob an NGN wallet
 
-$res = request('POST', '/wallet/transfer', ['recipient_id' => $bob->id, 'amount' => '10.00', 'currency' => 'NGN'], $alice);
+$res = request('POST', '/v1/wallet/transfer', ['recipient_id' => $bob->id, 'amount' => '10.00', 'currency' => 'NGN'], $alice);
 assertStatus($res, 200, 'transfer with default (same-class) recipient_type succeeds');
 $body = json($res);
 if (isset($body['transfer'], $body['debit_transaction'], $body['credit_transaction'])) {
@@ -453,10 +460,10 @@ if (isset($body['transfer'], $body['debit_transaction'], $body['credit_transacti
     fail('transfer response shape wrong', json_encode($body));
 }
 
-$res = request('POST', '/wallet/transfer', ['recipient_id' => $bob->id, 'recipient_type' => 'user', 'amount' => '1.00', 'currency' => 'NGN'], $alice);
+$res = request('POST', '/v1/wallet/transfer', ['recipient_id' => $bob->id, 'recipient_type' => 'user', 'amount' => '1.00', 'currency' => 'NGN'], $alice);
 assertStatus($res, 200, 'transfer with a recipient_type resolved through the morph map succeeds');
 
-$res = request('POST', '/wallet/transfer', ['recipient_id' => $bob->id, 'recipient_type' => 'App\\Models\\NotRegistered', 'amount' => '1.00', 'currency' => 'NGN'], $alice);
+$res = request('POST', '/v1/wallet/transfer', ['recipient_id' => $bob->id, 'recipient_type' => 'App\\Models\\NotRegistered', 'amount' => '1.00', 'currency' => 'NGN'], $alice);
 assertStatus($res, 422, 'an unregistered recipient_type is rejected (422), never instantiated from raw user input');
 
 // ============================================================
@@ -468,11 +475,11 @@ $aliceTx = Highvertical\Wallet\Infrastructure\Models\WalletTransaction::query()
     ->where('type', 'credit')
     ->first();
 
-assertStatus(request('GET', "/wallet/transactions/{$aliceTx->id}", [], $alice), 200, 'owner can view their own transaction by id');
-assertStatus(request('GET', "/wallet/transactions/{$aliceTx->id}", [], $bob), 403, 'a different authenticated user (with wallet.view-transactions but no ownership/view-all) cannot enumerate another user\'s transaction by id');
-assertStatus(request('GET', "/wallet/transactions/{$aliceTx->id}", [], $admin), 200, 'wallet.view-all holder can view any transaction');
+assertStatus(request('GET', "/v1/wallet/transactions/{$aliceTx->id}", [], $alice), 200, 'owner can view their own transaction by id');
+assertStatus(request('GET', "/v1/wallet/transactions/{$aliceTx->id}", [], $bob), 403, 'a different authenticated user (with wallet.view-transactions but no ownership/view-all) cannot enumerate another user\'s transaction by id');
+assertStatus(request('GET', "/v1/wallet/transactions/{$aliceTx->id}", [], $admin), 200, 'wallet.view-all holder can view any transaction');
 
-$res = request('GET', '/wallet/transactions', [], $alice);
+$res = request('GET', '/v1/wallet/transactions', [], $alice);
 assertStatus($res, 200, 'own transaction history listing succeeds');
 $listedWalletIds = array_column(json($res)['data'] ?? [], 'wallet_id');
 $bobWalletId = $bob->wallet()->id;
@@ -482,7 +489,7 @@ if (! in_array($bobWalletId, $listedWalletIds, true)) {
     fail('transaction history leaked another holder\'s wallet_id');
 }
 
-$res = request('GET', '/wallet/transactions-export', [], $alice);
+$res = request('GET', '/v1/wallet/transactions-export', [], $alice);
 assertStatus($res, 200, 'CSV export endpoint returns 200');
 if (str_contains((string) $res->headers->get('Content-Type'), 'text/csv')) {
     pass('CSV export responds with text/csv content type');
@@ -494,18 +501,18 @@ if (str_contains((string) $res->headers->get('Content-Type'), 'text/csv')) {
 // 5. WalletPolicy: admin wallet show is owner-or-view-all
 // ============================================================
 echo "\n--- WalletPolicy (admin wallets.show) ---\n";
-assertStatus(request('GET', "/wallet/admin/wallets/{$aliceWallet->id}", [], $alice), 200, 'owner can view their own wallet via the admin show route');
-assertStatus(request('GET', "/wallet/admin/wallets/{$aliceWallet->id}", [], $bob), 403, 'a non-owning, non-view-all user cannot view another holder\'s wallet');
-assertStatus(request('GET', "/wallet/admin/wallets/{$aliceWallet->id}", [], $admin), 200, 'wallet.view-all holder can view any wallet');
+assertStatus(request('GET', "/v1/wallet/admin/wallets/{$aliceWallet->id}", [], $alice), 200, 'owner can view their own wallet via the admin show route');
+assertStatus(request('GET', "/v1/wallet/admin/wallets/{$aliceWallet->id}", [], $bob), 403, 'a non-owning, non-view-all user cannot view another holder\'s wallet');
+assertStatus(request('GET', "/v1/wallet/admin/wallets/{$aliceWallet->id}", [], $admin), 200, 'wallet.view-all holder can view any wallet');
 
 // ============================================================
 // 6. Admin mutations: freeze/unfreeze, adjust, holds, reversal
 // ============================================================
 echo "\n--- Admin: freeze/unfreeze ---\n";
-assertStatus(request('POST', "/wallet/admin/wallets/{$aliceWallet->id}/freeze", ['reason' => 'suspicious activity'], $admin), 200, 'admin freeze succeeds');
-$res = request('POST', '/wallet/deposit', ['amount' => '1.00', 'currency' => 'NGN'], $alice);
+assertStatus(request('POST', "/v1/wallet/admin/wallets/{$aliceWallet->id}/freeze", ['reason' => 'suspicious activity'], $admin), 200, 'admin freeze succeeds');
+$res = request('POST', '/v1/wallet/deposit', ['amount' => '1.00', 'currency' => 'NGN'], $alice);
 assertStatus($res, 423, 'depositing into a frozen wallet renders WalletNotUsableException as 423');
-assertStatus(request('POST', "/wallet/admin/wallets/{$aliceWallet->id}/unfreeze", [], $admin), 200, 'admin unfreeze succeeds');
+assertStatus(request('POST', "/v1/wallet/admin/wallets/{$aliceWallet->id}/unfreeze", [], $admin), 200, 'admin unfreeze succeeds');
 $aliceWallet->refresh();
 if ($aliceWallet->status === 'active') {
     pass('wallet is active again after unfreeze');
@@ -514,7 +521,7 @@ if ($aliceWallet->status === 'active') {
 }
 
 echo "\n--- Admin: adjust balance ---\n";
-$res = request('POST', "/wallet/admin/wallets/{$aliceWallet->id}/adjust", ['amount' => '-5.00', 'reason' => 'manual correction'], $admin);
+$res = request('POST', "/v1/wallet/admin/wallets/{$aliceWallet->id}/adjust", ['amount' => '-5.00', 'reason' => 'manual correction'], $admin);
 assertStatus($res, 201, 'admin adjust-balance succeeds (JsonResource wraps a freshly-created transaction)');
 if ((json($res)['data']['type'] ?? null) === 'debit') {
     pass('negative adjustment records as a debit transaction');
@@ -523,11 +530,11 @@ if ((json($res)['data']['type'] ?? null) === 'debit') {
 }
 
 echo "\n--- Admin: holds ---\n";
-$res = request('POST', "/wallet/admin/wallets/{$aliceWallet->id}/holds", ['amount' => '5.00', 'reason' => 'pending order'], $admin);
+$res = request('POST', "/v1/wallet/admin/wallets/{$aliceWallet->id}/holds", ['amount' => '5.00', 'reason' => 'pending order'], $admin);
 assertStatus($res, 201, 'admin place-hold succeeds (JsonResource wraps a freshly-created hold)');
 $holdId = json($res)['data']['id'] ?? null;
 
-$res = request('POST', "/wallet/admin/holds/{$holdId}/release", [], $admin);
+$res = request('POST', "/v1/wallet/admin/holds/{$holdId}/release", [], $admin);
 assertStatus($res, 200, 'admin release-hold succeeds');
 if ((json($res)['data']['status'] ?? null) === 'released') {
     pass('released hold reflects released status');
@@ -535,10 +542,10 @@ if ((json($res)['data']['status'] ?? null) === 'released') {
     fail('hold status wrong after release', json_encode(json($res)));
 }
 
-$res = request('POST', "/wallet/admin/wallets/{$aliceWallet->id}/holds", ['amount' => '3.00', 'reason' => 'second hold'], $admin);
+$res = request('POST', "/v1/wallet/admin/wallets/{$aliceWallet->id}/holds", ['amount' => '3.00', 'reason' => 'second hold'], $admin);
 $holdId2 = json($res)['data']['id'] ?? null;
-$res = request('POST', "/wallet/admin/holds/{$holdId2}/capture", [], $admin);
-assertStatus($res, 200, 'admin capture-hold succeeds (shares wallet.release-hold permission by design)');
+$res = request('POST', "/v1/wallet/admin/holds/{$holdId2}/capture", [], $admin);
+assertStatus($res, 200, 'admin capture-hold succeeds (wallet.capture-hold permission)');
 if (($body = json($res)) && ($body['hold']['status'] ?? null) === 'captured' && isset($body['transaction'])) {
     pass('captured hold returns hold + transaction resources');
 } else {
@@ -551,8 +558,8 @@ echo "\n--- Admin: reverse transaction ---\n";
 // credit debits the wallet by that same amount - so without this the reversal
 // would correctly (but inconveniently for this positive-path test) fail with
 // InsufficientFundsException.
-request('POST', '/wallet/deposit', ['amount' => '100.00', 'currency' => 'NGN'], $alice);
-$res = request('POST', "/wallet/admin/transactions/{$aliceTx->id}/reverse", ['reason' => 'chargeback'], $admin);
+request('POST', '/v1/wallet/deposit', ['amount' => '100.00', 'currency' => 'NGN'], $alice);
+$res = request('POST', "/v1/wallet/admin/transactions/{$aliceTx->id}/reverse", ['reason' => 'chargeback'], $admin);
 assertStatus($res, 201, 'admin reverse-transaction succeeds (JsonResource wraps a freshly-created reversal transaction)');
 if ((json($res)['data']['type'] ?? null) === 'debit') {
     pass('reversing a credit produces a debit transaction');
@@ -564,7 +571,7 @@ if ((json($res)['data']['type'] ?? null) === 'debit') {
 // 7. Admin flat-permission enforcement (non-admin denied)
 // ============================================================
 echo "\n--- Admin permission enforcement ---\n";
-assertStatus(request('POST', "/wallet/admin/wallets/{$aliceWallet->id}/freeze", ['reason' => 'test'], $alice), 403, 'a regular user without wallet.freeze cannot freeze any wallet');
+assertStatus(request('POST', "/v1/wallet/admin/wallets/{$aliceWallet->id}/freeze", ['reason' => 'test'], $alice), 403, 'a regular user without wallet.freeze cannot freeze any wallet');
 
 // ============================================================
 // 8. Rate limiting (throttle:wallet-user, 30/min)
@@ -573,7 +580,7 @@ echo "\n--- Rate limiting ---\n";
 $limit = (int) config('wallet.rate_limits.wallet-user.limit');
 $last = null;
 for ($i = 0; $i <= $limit; $i++) {
-    $last = request('GET', '/wallet', [], $rateUser);
+    $last = request('GET', '/v1/wallet', [], $rateUser);
 }
 assertStatus($last, 429, "the ".($limit + 1)."th request within a minute is throttled by throttle:wallet-user");
 

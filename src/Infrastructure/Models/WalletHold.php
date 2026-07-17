@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Highvertical\Wallet\Infrastructure\Models;
 
 use Highvertical\Wallet\Domain\Enums\HoldStatus;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
 
@@ -32,6 +34,21 @@ final class WalletHold extends Model
                 throw new InvalidArgumentException(sprintf('"%s" is not a valid hold status.', $hold->status));
             }
         });
+    }
+
+    /**
+     * ACTIVE holds whose TTL has passed but haven't been formally flipped to
+     * EXPIRED yet (see wallet:expire-holds) still lock funds without this
+     * filter - every available-balance calculation across the package uses
+     * this scope instead of a bare status check.
+     */
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query
+            ->where('status', HoldStatus::ACTIVE)
+            ->where(function (Builder $query) {
+                $query->whereNull('expires_at')->orWhere('expires_at', '>', Carbon::now());
+            });
     }
 
     public function wallet(): BelongsTo

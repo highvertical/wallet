@@ -13,7 +13,6 @@ use Highvertical\Wallet\Http\Requests\FreezeWalletRequest;
 use Highvertical\Wallet\Http\Resources\WalletResource;
 use Highvertical\Wallet\Http\Resources\WalletTransactionResource;
 use Highvertical\Wallet\Infrastructure\Models\Wallet;
-use Illuminate\Http\Request;
 
 /**
  * Admin: acts on any wallet by id. `wallets.show` is instance-scoped via

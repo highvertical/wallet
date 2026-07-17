@@ -1,0 +1,1207 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\Wallet\:\:\$balance\.$#'
+			identifier: property.notFound
+			count: 3
+			path: src/Application/Actions/AdjustBalanceAction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\Wallet\:\:\$currency\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Application/Actions/AdjustBalanceAction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\Wallet\:\:\$max_balance\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Application/Actions/AdjustBalanceAction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\Wallet\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Application/Actions/AdjustBalanceAction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction\:\:\$balance_after\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Application/Actions/AdjustBalanceAction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction\:\:\$balance_before\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Application/Actions/AdjustBalanceAction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction\:\:\$initiated_by\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Application/Actions/AdjustBalanceAction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction\:\:\$initiated_ip\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Application/Actions/AdjustBalanceAction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction\:\:\$type\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Application/Actions/AdjustBalanceAction.php
+
+		-
+			message: '#^Parameter \#2 \$callback of method Highvertical\\Wallet\\Application\\Services\\WalletLocker\:\:lock\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model\)\: Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction, Closure\(Highvertical\\Wallet\\Infrastructure\\Models\\Wallet\)\: Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Application/Actions/AdjustBalanceAction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\Wallet\:\:\$balance\.$#'
+			identifier: property.notFound
+			count: 2
+			path: src/Application/Actions/CaptureHoldAction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\Wallet\:\:\$currency\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Application/Actions/CaptureHoldAction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\Wallet\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Application/Actions/CaptureHoldAction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletHold\:\:\$amount\.$#'
+			identifier: property.notFound
+			count: 2
+			path: src/Application/Actions/CaptureHoldAction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletHold\:\:\$capture_transaction_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Application/Actions/CaptureHoldAction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletHold\:\:\$reason\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Application/Actions/CaptureHoldAction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletHold\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Application/Actions/CaptureHoldAction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletHold\:\:\$uuid\.$#'
+			identifier: property.notFound
+			count: 2
+			path: src/Application/Actions/CaptureHoldAction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletHold\:\:\$wallet_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Application/Actions/CaptureHoldAction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction\:\:\$amount\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Application/Actions/CaptureHoldAction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction\:\:\$balance_after\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Application/Actions/CaptureHoldAction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction\:\:\$balance_before\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Application/Actions/CaptureHoldAction.php
+
+		-
+			message: '#^Parameter \#2 \$callback of method Highvertical\\Wallet\\Application\\Services\\WalletLocker\:\:lock\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model\)\: array\{hold\: Highvertical\\Wallet\\Infrastructure\\Models\\WalletHold, transaction\: Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction, replayed\: bool\}, Closure\(Highvertical\\Wallet\\Infrastructure\\Models\\Wallet\)\: array\{hold\: Highvertical\\Wallet\\Infrastructure\\Models\\WalletHold, transaction\: Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction, replayed\: bool\} given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Application/Actions/CaptureHoldAction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\Wallet\:\:\$balance\.$#'
+			identifier: property.notFound
+			count: 2
+			path: src/Application/Actions/DepositFundsAction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\Wallet\:\:\$max_balance\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Application/Actions/DepositFundsAction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\Wallet\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Application/Actions/DepositFundsAction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction\:\:\$balance_after\.$#'
+			identifier: property.notFound
+			count: 2
+			path: src/Application/Actions/DepositFundsAction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction\:\:\$balance_before\.$#'
+			identifier: property.notFound
+			count: 2
+			path: src/Application/Actions/DepositFundsAction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction\:\:\$initiated_by\.$#'
+			identifier: property.notFound
+			count: 2
+			path: src/Application/Actions/DepositFundsAction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction\:\:\$initiated_ip\.$#'
+			identifier: property.notFound
+			count: 2
+			path: src/Application/Actions/DepositFundsAction.php
+
+		-
+			message: '#^Parameter \#2 \$callback of method Highvertical\\Wallet\\Application\\Services\\WalletLocker\:\:lock\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model\)\: array\{transaction\: Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction, fee_transaction\: Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction\|null\}, Closure\(Highvertical\\Wallet\\Infrastructure\\Models\\Wallet\)\: array\{transaction\: Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction, fee_transaction\: Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction\|null\} given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Application/Actions/DepositFundsAction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletHold\:\:\$wallet_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Application/Actions/ExpireHoldsAction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletHold\|Illuminate\\Database\\Eloquent\\Collection\<int, Highvertical\\Wallet\\Infrastructure\\Models\\WalletHold\>\:\:\$expires_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Application/Actions/ExpireHoldsAction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletHold\|Illuminate\\Database\\Eloquent\\Collection\<int, Highvertical\\Wallet\\Infrastructure\\Models\\WalletHold\>\:\:\$released_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Application/Actions/ExpireHoldsAction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletHold\|Illuminate\\Database\\Eloquent\\Collection\<int, Highvertical\\Wallet\\Infrastructure\\Models\\WalletHold\>\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Application/Actions/ExpireHoldsAction.php
+
+		-
+			message: '#^Parameter \#2 \$callback of method Highvertical\\Wallet\\Application\\Services\\WalletLocker\:\:lock\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model\)\: \(Highvertical\\Wallet\\Infrastructure\\Models\\WalletHold\|Illuminate\\Database\\Eloquent\\Collection\<int, Highvertical\\Wallet\\Infrastructure\\Models\\WalletHold\>\|null\), Closure\(Highvertical\\Wallet\\Infrastructure\\Models\\Wallet\)\: \(Highvertical\\Wallet\\Infrastructure\\Models\\WalletHold\|Illuminate\\Database\\Eloquent\\Collection\<int, Highvertical\\Wallet\\Infrastructure\\Models\\WalletHold\>\|null\) given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Application/Actions/ExpireHoldsAction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\Wallet\:\:\$frozen_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Application/Actions/FreezeWalletAction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\Wallet\:\:\$frozen_by\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Application/Actions/FreezeWalletAction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\Wallet\:\:\$frozen_reason\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Application/Actions/FreezeWalletAction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\Wallet\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Application/Actions/FreezeWalletAction.php
+
+		-
+			message: '#^Parameter \#2 \$callback of method Highvertical\\Wallet\\Application\\Services\\WalletLocker\:\:lock\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model\)\: Highvertical\\Wallet\\Infrastructure\\Models\\Wallet, Closure\(Highvertical\\Wallet\\Infrastructure\\Models\\Wallet\)\: Highvertical\\Wallet\\Infrastructure\\Models\\Wallet given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Application/Actions/FreezeWalletAction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\Wallet\:\:\$balance\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Application/Actions/PlaceHoldAction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\Wallet\:\:\$currency\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Application/Actions/PlaceHoldAction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\Wallet\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Application/Actions/PlaceHoldAction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletHold\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Application/Actions/PlaceHoldAction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletHold\:\:\$subject_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Application/Actions/PlaceHoldAction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletHold\:\:\$subject_type\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Application/Actions/PlaceHoldAction.php
+
+		-
+			message: '#^Parameter \#2 \$callback of method Highvertical\\Wallet\\Application\\Services\\WalletLocker\:\:lock\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model\)\: Highvertical\\Wallet\\Infrastructure\\Models\\WalletHold, Closure\(Highvertical\\Wallet\\Infrastructure\\Models\\Wallet\)\: Highvertical\\Wallet\\Infrastructure\\Models\\WalletHold given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Application/Actions/PlaceHoldAction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\Wallet\:\:\$balance\.$#'
+			identifier: property.notFound
+			count: 5
+			path: src/Application/Actions/ReconcileWalletLedgerAction.php
+
+		-
+			message: '#^Parameter \#2 \$callback of method Highvertical\\Wallet\\Application\\Services\\WalletLocker\:\:lock\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model\)\: Highvertical\\Wallet\\Infrastructure\\Models\\Wallet, Closure\(Highvertical\\Wallet\\Infrastructure\\Models\\Wallet\)\: Highvertical\\Wallet\\Infrastructure\\Models\\Wallet given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Application/Actions/ReconcileWalletLedgerAction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletHold\:\:\$released_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Application/Actions/ReleaseHoldAction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletHold\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Application/Actions/ReleaseHoldAction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletHold\:\:\$wallet_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Application/Actions/ReleaseHoldAction.php
+
+		-
+			message: '#^Parameter \#2 \$callback of method Highvertical\\Wallet\\Application\\Services\\WalletLocker\:\:lock\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model\)\: array\{hold\: Highvertical\\Wallet\\Infrastructure\\Models\\WalletHold, released\: bool\}, Closure\(Highvertical\\Wallet\\Infrastructure\\Models\\Wallet\)\: array\{hold\: Highvertical\\Wallet\\Infrastructure\\Models\\WalletHold, released\: bool\} given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Application/Actions/ReleaseHoldAction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\Wallet\:\:\$balance\.$#'
+			identifier: property.notFound
+			count: 2
+			path: src/Application/Actions/ReverseTransactionAction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction\:\:\$amount\.$#'
+			identifier: property.notFound
+			count: 3
+			path: src/Application/Actions/ReverseTransactionAction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction\:\:\$balance_after\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Application/Actions/ReverseTransactionAction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction\:\:\$balance_before\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Application/Actions/ReverseTransactionAction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction\:\:\$initiated_by\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Application/Actions/ReverseTransactionAction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction\:\:\$reference\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Application/Actions/ReverseTransactionAction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Application/Actions/ReverseTransactionAction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction\:\:\$type\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Application/Actions/ReverseTransactionAction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction\:\:\$uuid\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Application/Actions/ReverseTransactionAction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction\:\:\$wallet_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Application/Actions/ReverseTransactionAction.php
+
+		-
+			message: '#^Parameter \#2 \$callback of method Highvertical\\Wallet\\Application\\Services\\WalletLocker\:\:lock\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model\)\: array\{original\: Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction, reversal\: Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction\}, Closure\(Highvertical\\Wallet\\Infrastructure\\Models\\Wallet\)\: array\{original\: Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction, reversal\: Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction\} given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Application/Actions/ReverseTransactionAction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\Wallet\:\:\$balance\.$#'
+			identifier: property.notFound
+			count: 6
+			path: src/Application/Actions/TransferFundsAction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\Wallet\:\:\$currency\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Application/Actions/TransferFundsAction.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$currency\.$#'
+			identifier: property.notFound
+			count: 5
+			path: src/Application/Actions/TransferFundsAction.php
+
+		-
+			message: '#^Method Highvertical\\Wallet\\Application\\Actions\\TransferFundsAction\:\:resolveCrossCurrencyRecipientWallet\(\) should return Highvertical\\Wallet\\Infrastructure\\Models\\Wallet\|null but returns Illuminate\\Database\\Eloquent\\Model\|null\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Application/Actions/TransferFundsAction.php
+
+		-
+			message: '#^Method Highvertical\\Wallet\\Application\\Actions\\TransferFundsAction\:\:resolveCrossCurrencyRecipientWallet\(\) should return Highvertical\\Wallet\\Infrastructure\\Models\\Wallet\|null but returns Illuminate\\Database\\Eloquent\\Model\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Application/Actions/TransferFundsAction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\Wallet\:\:\$low_balance_alert\.$#'
+			identifier: property.notFound
+			count: 2
+			path: src/Application/Actions/TransferFundsAction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\Wallet\:\:\$max_balance\.$#'
+			identifier: property.notFound
+			count: 2
+			path: src/Application/Actions/TransferFundsAction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\Wallet\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 2
+			path: src/Application/Actions/TransferFundsAction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction\:\:\$balance_after\.$#'
+			identifier: property.notFound
+			count: 3
+			path: src/Application/Actions/TransferFundsAction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction\:\:\$balance_before\.$#'
+			identifier: property.notFound
+			count: 3
+			path: src/Application/Actions/TransferFundsAction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction\:\:\$initiated_by\.$#'
+			identifier: property.notFound
+			count: 2
+			path: src/Application/Actions/TransferFundsAction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction\:\:\$initiated_ip\.$#'
+			identifier: property.notFound
+			count: 2
+			path: src/Application/Actions/TransferFundsAction.php
+
+		-
+			message: '#^Method Highvertical\\Wallet\\Application\\Actions\\TransferFundsAction\:\:handle\(\) should return array\{transfer\: Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransfer, debit_transaction\: Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction, credit_transaction\: Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction, fee_transaction\: Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction\|null\} but returns array\{transfer\: Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransfer, debit_transaction\: Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction, credit_transaction\: Illuminate\\Database\\Eloquent\\Model\|null, fee_transaction\: Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction\|null\}\.$#'
+			identifier: return.type
+			count: 2
+			path: src/Application/Actions/TransferFundsAction.php
+
+		-
+			message: '#^Offset ''low_balance'' on array\{transfer\: Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransfer, debit_transaction\: Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction, credit_transaction\: Illuminate\\Database\\Eloquent\\Model\|null, fee_transaction\: Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction\|null, low_balance\: bool, wallet\?\: Highvertical\\Wallet\\Infrastructure\\Models\\Wallet\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Application/Actions/TransferFundsAction.php
+
+		-
+			message: '#^Parameter \#3 \$callback of method Highvertical\\Wallet\\Application\\Services\\WalletLocker\:\:lockPair\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model, Illuminate\\Database\\Eloquent\\Model\)\: array\{transfer\: Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransfer, debit_transaction\: Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction, credit_transaction\: Illuminate\\Database\\Eloquent\\Model\|null, fee_transaction\: Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction\|null, low_balance\: bool, wallet\?\: Highvertical\\Wallet\\Infrastructure\\Models\\Wallet\}, Closure\(Highvertical\\Wallet\\Infrastructure\\Models\\Wallet, Highvertical\\Wallet\\Infrastructure\\Models\\Wallet\)\: array\{transfer\: Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransfer, debit_transaction\: Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction, credit_transaction\: Illuminate\\Database\\Eloquent\\Model\|null, fee_transaction\: Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction\|null, low_balance\: bool, wallet\?\: Highvertical\\Wallet\\Infrastructure\\Models\\Wallet\} given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Application/Actions/TransferFundsAction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\Wallet\:\:\$frozen_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Application/Actions/UnfreezeWalletAction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\Wallet\:\:\$frozen_by\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Application/Actions/UnfreezeWalletAction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\Wallet\:\:\$frozen_reason\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Application/Actions/UnfreezeWalletAction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\Wallet\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Application/Actions/UnfreezeWalletAction.php
+
+		-
+			message: '#^Parameter \#2 \$callback of method Highvertical\\Wallet\\Application\\Services\\WalletLocker\:\:lock\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model\)\: array\{wallet\: Highvertical\\Wallet\\Infrastructure\\Models\\Wallet, changed\: bool\}, Closure\(Highvertical\\Wallet\\Infrastructure\\Models\\Wallet\)\: array\{wallet\: Highvertical\\Wallet\\Infrastructure\\Models\\Wallet, changed\: bool\} given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Application/Actions/UnfreezeWalletAction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\Wallet\:\:\$balance\.$#'
+			identifier: property.notFound
+			count: 3
+			path: src/Application/Actions/WithdrawFundsAction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\Wallet\:\:\$low_balance_alert\.$#'
+			identifier: property.notFound
+			count: 2
+			path: src/Application/Actions/WithdrawFundsAction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\Wallet\:\:\$max_balance\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Application/Actions/WithdrawFundsAction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\Wallet\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Application/Actions/WithdrawFundsAction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction\:\:\$balance_after\.$#'
+			identifier: property.notFound
+			count: 2
+			path: src/Application/Actions/WithdrawFundsAction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction\:\:\$balance_before\.$#'
+			identifier: property.notFound
+			count: 2
+			path: src/Application/Actions/WithdrawFundsAction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction\:\:\$initiated_by\.$#'
+			identifier: property.notFound
+			count: 2
+			path: src/Application/Actions/WithdrawFundsAction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction\:\:\$initiated_ip\.$#'
+			identifier: property.notFound
+			count: 2
+			path: src/Application/Actions/WithdrawFundsAction.php
+
+		-
+			message: '#^Offset ''low_balance'' on array\{transaction\: Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction, fee_transaction\: Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction\|null, low_balance\: bool, wallet\?\: Highvertical\\Wallet\\Infrastructure\\Models\\Wallet\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Application/Actions/WithdrawFundsAction.php
+
+		-
+			message: '#^Parameter \#2 \$callback of method Highvertical\\Wallet\\Application\\Services\\WalletLocker\:\:lock\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model\)\: array\{transaction\: Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction, fee_transaction\: Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction\|null, low_balance\: bool, wallet\?\: Highvertical\\Wallet\\Infrastructure\\Models\\Wallet\}, Closure\(Highvertical\\Wallet\\Infrastructure\\Models\\Wallet\)\: array\{transaction\: Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction, fee_transaction\: Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction\|null, low_balance\: bool, wallet\?\: Highvertical\\Wallet\\Infrastructure\\Models\\Wallet\} given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Application/Actions/WithdrawFundsAction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\Wallet\:\:\$currency\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Http/Controllers/Admin/HoldController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$currency\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Http/Controllers/Admin/HoldController.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\Wallet\:\:\$currency\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Http/Controllers/Admin/WalletController.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction\:\:\$amount\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Http/Controllers/TransactionController.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction\:\:\$balance_after\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Http/Controllers/TransactionController.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction\:\:\$category\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Http/Controllers/TransactionController.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Http/Controllers/TransactionController.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction\:\:\$reference\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Http/Controllers/TransactionController.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Http/Controllers/TransactionController.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction\:\:\$type\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Http/Controllers/TransactionController.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction\:\:\$uuid\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Http/Controllers/TransactionController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$currency\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Http/Controllers/TransactionController.php
+
+		-
+			message: '#^Cannot call static method query\(\) on class\-string\<Illuminate\\Database\\Eloquent\\Model\>\|false\.$#'
+			identifier: staticMethod.nonObject
+			count: 1
+			path: src/Http/Controllers/TransactionController.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Foundation\\Auth\\User\:\:wallets\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Http/Controllers/WalletController.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Http\\Resources\\WalletHoldResource\:\:\$amount\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Http/Resources/WalletHoldResource.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Http\\Resources\\WalletHoldResource\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Http/Resources/WalletHoldResource.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Http\\Resources\\WalletHoldResource\:\:\$expires_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Http/Resources/WalletHoldResource.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Http\\Resources\\WalletHoldResource\:\:\$reason\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Http/Resources/WalletHoldResource.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Http\\Resources\\WalletHoldResource\:\:\$released_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Http/Resources/WalletHoldResource.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Http\\Resources\\WalletHoldResource\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Http/Resources/WalletHoldResource.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Http\\Resources\\WalletHoldResource\:\:\$uuid\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Http/Resources/WalletHoldResource.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Http\\Resources\\WalletHoldResource\:\:\$wallet_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Http/Resources/WalletHoldResource.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$currency\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Http/Resources/WalletHoldResource.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Http\\Resources\\WalletResource\:\:\$balance\.$#'
+			identifier: property.notFound
+			count: 2
+			path: src/Http/Resources/WalletResource.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Http\\Resources\\WalletResource\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Http/Resources/WalletResource.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Http\\Resources\\WalletResource\:\:\$currency\.$#'
+			identifier: property.notFound
+			count: 6
+			path: src/Http/Resources/WalletResource.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Http\\Resources\\WalletResource\:\:\$low_balance_alert\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Http/Resources/WalletResource.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Http\\Resources\\WalletResource\:\:\$max_balance\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Http/Resources/WalletResource.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Http\\Resources\\WalletResource\:\:\$min_balance\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Http/Resources/WalletResource.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Http\\Resources\\WalletResource\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Http/Resources/WalletResource.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Http\\Resources\\WalletResource\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Http/Resources/WalletResource.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Http\\Resources\\WalletResource\:\:\$updated_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Http/Resources/WalletResource.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Http\\Resources\\WalletTransactionResource\:\:\$amount\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Http/Resources/WalletTransactionResource.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Http\\Resources\\WalletTransactionResource\:\:\$balance_after\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Http/Resources/WalletTransactionResource.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Http\\Resources\\WalletTransactionResource\:\:\$balance_before\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Http/Resources/WalletTransactionResource.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Http\\Resources\\WalletTransactionResource\:\:\$category\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Http/Resources/WalletTransactionResource.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Http\\Resources\\WalletTransactionResource\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Http/Resources/WalletTransactionResource.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Http\\Resources\\WalletTransactionResource\:\:\$description\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Http/Resources/WalletTransactionResource.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Http\\Resources\\WalletTransactionResource\:\:\$meta\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Http/Resources/WalletTransactionResource.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Http\\Resources\\WalletTransactionResource\:\:\$reference\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Http/Resources/WalletTransactionResource.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Http\\Resources\\WalletTransactionResource\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Http/Resources/WalletTransactionResource.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Http\\Resources\\WalletTransactionResource\:\:\$type\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Http/Resources/WalletTransactionResource.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Http\\Resources\\WalletTransactionResource\:\:\$uuid\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Http/Resources/WalletTransactionResource.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Http\\Resources\\WalletTransactionResource\:\:\$wallet_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Http/Resources/WalletTransactionResource.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$currency\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Http/Resources/WalletTransactionResource.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Http\\Resources\\WalletTransferResource\:\:\$amount\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Http/Resources/WalletTransferResource.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Http\\Resources\\WalletTransferResource\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Http/Resources/WalletTransferResource.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Http\\Resources\\WalletTransferResource\:\:\$fee\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Http/Resources/WalletTransferResource.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Http\\Resources\\WalletTransferResource\:\:\$from_wallet_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Http/Resources/WalletTransferResource.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Http\\Resources\\WalletTransferResource\:\:\$note\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Http/Resources/WalletTransferResource.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Http\\Resources\\WalletTransferResource\:\:\$to_wallet_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Http/Resources/WalletTransferResource.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Http\\Resources\\WalletTransferResource\:\:\$uuid\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Http/Resources/WalletTransferResource.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$currency\.$#'
+			identifier: property.notFound
+			count: 2
+			path: src/Http/Resources/WalletTransferResource.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Http\\Resources\\WalletTransferResource\:\:\$exchange_rate\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Http/Resources/WalletTransferResource.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Http\\Resources\\WalletTransferResource\:\:\$converted_amount\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Http/Resources/WalletTransferResource.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\Wallet\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 2
+			path: src/Infrastructure/Models/Wallet.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletHold\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 2
+			path: src/Infrastructure/Models/WalletHold.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletHold\:\:\$uuid\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Infrastructure/Models/WalletHold.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction\:\:\$category\.$#'
+			identifier: property.notFound
+			count: 2
+			path: src/Infrastructure/Models/WalletTransaction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 2
+			path: src/Infrastructure/Models/WalletTransaction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction\:\:\$type\.$#'
+			identifier: property.notFound
+			count: 2
+			path: src/Infrastructure/Models/WalletTransaction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction\:\:\$uuid\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Infrastructure/Models/WalletTransaction.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransfer\:\:\$uuid\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Infrastructure/Models/WalletTransfer.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\Wallet\:\:\$balance\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Listeners/RecordAuditLog.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\Wallet\:\:\$frozen_by\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Listeners/RecordAuditLog.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\Wallet\:\:\$frozen_reason\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Listeners/RecordAuditLog.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\Wallet\:\:\$max_balance\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Listeners/RecordAuditLog.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\Wallet\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Listeners/RecordAuditLog.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletHold\:\:\$amount\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Listeners/RecordAuditLog.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletHold\:\:\$reason\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Listeners/RecordAuditLog.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletHold\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Listeners/RecordAuditLog.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletHold\:\:\$uuid\.$#'
+			identifier: property.notFound
+			count: 2
+			path: src/Listeners/RecordAuditLog.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletHold\:\:\$wallet_id\.$#'
+			identifier: property.notFound
+			count: 2
+			path: src/Listeners/RecordAuditLog.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction\:\:\$amount\.$#'
+			identifier: property.notFound
+			count: 3
+			path: src/Listeners/RecordAuditLog.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction\:\:\$balance_after\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Listeners/RecordAuditLog.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction\:\:\$balance_before\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Listeners/RecordAuditLog.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction\:\:\$category\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Listeners/RecordAuditLog.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction\:\:\$initiated_by\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Listeners/RecordAuditLog.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction\:\:\$initiated_ip\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Listeners/RecordAuditLog.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction\:\:\$reference\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Listeners/RecordAuditLog.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction\:\:\$type\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Listeners/RecordAuditLog.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction\:\:\$uuid\.$#'
+			identifier: property.notFound
+			count: 4
+			path: src/Listeners/RecordAuditLog.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction\:\:\$wallet_id\.$#'
+			identifier: property.notFound
+			count: 2
+			path: src/Listeners/RecordAuditLog.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransfer\:\:\$amount\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Listeners/RecordAuditLog.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransfer\:\:\$credit_transaction_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Listeners/RecordAuditLog.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransfer\:\:\$debit_transaction_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Listeners/RecordAuditLog.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransfer\:\:\$fee\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Listeners/RecordAuditLog.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransfer\:\:\$from_wallet_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Listeners/RecordAuditLog.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransfer\:\:\$to_wallet_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Listeners/RecordAuditLog.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransfer\:\:\$uuid\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Listeners/RecordAuditLog.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\Wallet\:\:\$currency\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Listeners/SendTransactionNotification.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletHold\:\:\$amount\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Listeners/SendTransactionNotification.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransaction\:\:\$amount\.$#'
+			identifier: property.notFound
+			count: 3
+			path: src/Listeners/SendTransactionNotification.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\WalletTransfer\:\:\$amount\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Listeners/SendTransactionNotification.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$currency\.$#'
+			identifier: property.notFound
+			count: 5
+			path: src/Listeners/SendTransactionNotification.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$holder\.$#'
+			identifier: property.notFound
+			count: 6
+			path: src/Listeners/SendTransactionNotification.php
+
+		-
+			message: '#^Parameter \#1 \$array \(array\{\}\) to function array_values is empty, call has no effect\.$#'
+			identifier: arrayValues.empty
+			count: 1
+			path: src/Listeners/SendTransactionNotification.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\Wallet\:\:\$holder_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Policies/WalletPolicy.php
+
+		-
+			message: '#^Access to an undefined property Highvertical\\Wallet\\Infrastructure\\Models\\Wallet\:\:\$holder_type\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Policies/WalletPolicy.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:can\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Policies/WalletPolicy.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$holder_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Policies/WalletTransactionPolicy.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$holder_type\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Policies/WalletTransactionPolicy.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:can\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Policies/WalletTransactionPolicy.php
+
+		-
+			message: '#^Instanceof between NunoMaduro\\Collision\\Adapters\\Laravel\\ExceptionHandler and Illuminate\\Foundation\\Exceptions\\Handler will always evaluate to false\.$#'
+			identifier: instanceof.alwaysFalse
+			count: 1
+			path: src/Providers/WalletServiceProvider.php
+
+		-
+			message: '#^Unreachable statement \- code above always terminates\.$#'
+			identifier: deadCode.unreachable
+			count: 1
+			path: src/Providers/WalletServiceProvider.php
+
+		-
+			message: '#^Trait Highvertical\\Wallet\\Traits\\HasWallet is used zero times and is not analysed\.$#'
+			identifier: trait.unused
+			count: 1
+			path: src/Traits/HasWallet.php

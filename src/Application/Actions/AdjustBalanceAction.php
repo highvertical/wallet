@@ -6,17 +6,20 @@ namespace Highvertical\Wallet\Application\Actions;
 
 use Highvertical\Wallet\Application\Services\WalletLocker;
 use Highvertical\Wallet\Domain\Data\AdjustmentData;
-use Highvertical\Wallet\Domain\Enums\HoldStatus;
 use Highvertical\Wallet\Domain\Enums\TransactionCategory;
 use Highvertical\Wallet\Domain\Enums\TransactionStatus;
 use Highvertical\Wallet\Domain\Enums\TransactionType;
+use Highvertical\Wallet\Domain\Enums\WalletStatus;
+use Highvertical\Wallet\Domain\Exceptions\CurrencyMismatchException;
 use Highvertical\Wallet\Domain\Exceptions\InsufficientFundsException;
 use Highvertical\Wallet\Domain\Exceptions\InvalidAmountException;
+use Highvertical\Wallet\Domain\Exceptions\WalletNotUsableException;
 use Highvertical\Wallet\Events\WalletCredited;
 use Highvertical\Wallet\Events\WalletDebited;
 use Highvertical\Wallet\Infrastructure\Models\Wallet;
 use Highvertical\Wallet\Infrastructure\Models\WalletHold;
 use Highvertical\Wallet\Infrastructure\Models\WalletTransaction;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Str;
 
 final class AdjustBalanceAction
@@ -33,14 +36,28 @@ final class AdjustBalanceAction
 
         $reference = $data->reference ?? (string) Str::uuid();
 
+        $existing = WalletTransaction::query()->where('reference', $reference)->first();
+
+        if ($existing !== null) {
+            return $existing;
+        }
+
         $transaction = $this->locker->lock($data->walletId, function (Wallet $wallet) use ($data, $reference) {
+            if ($wallet->status !== WalletStatus::ACTIVE) {
+                throw new WalletNotUsableException('This wallet is not currently usable.');
+            }
+
+            if ($wallet->currency !== strtoupper($data->amount->currency())) {
+                throw new CurrencyMismatchException('The adjustment currency does not match the wallet currency.');
+            }
+
             $isCredit = $data->amount->isPositive();
             $magnitude = $data->amount->abs()->minorUnits();
 
             if (! $isCredit) {
                 $heldMinorUnits = (int) WalletHold::query()
                     ->where('wallet_id', $wallet->getKey())
-                    ->where('status', HoldStatus::ACTIVE)
+                    ->active()
                     ->sum('amount');
 
                 $availableBalance = $wallet->balance - $heldMinorUnits;
@@ -72,7 +89,18 @@ final class AdjustBalanceAction
             $transaction->balance_after = $balanceAfter;
             $transaction->initiated_by = $data->initiatedBy;
             $transaction->initiated_ip = $data->initiatedIp;
-            $transaction->save();
+
+            try {
+                $transaction->save();
+            } catch (QueryException $exception) {
+                $existing = WalletTransaction::query()->where('reference', $reference)->first();
+
+                if ($existing !== null) {
+                    return $existing;
+                }
+
+                throw $exception;
+            }
 
             $wallet->balance = $balanceAfter;
             $wallet->save();

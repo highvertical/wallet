@@ -47,7 +47,7 @@ final class WalletPermissionSeederTest extends TestCase
         (new WalletPermissionSeeder())->run();
         (new WalletPermissionSeeder())->run();
 
-        $this->assertSame(13, Permission::count());
+        $this->assertSame(14, Permission::count());
         $this->assertSame(2, Role::count());
     }
 

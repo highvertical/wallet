@@ -27,8 +27,16 @@ final class ReleaseHoldAction
             throw new ModelNotFoundException(sprintf('No hold found with id "%d".', $holdId));
         }
 
-        $released = $this->locker->lock($hold->wallet_id, function (Wallet $wallet) use ($holdId) {
+        $result = $this->locker->lock($hold->wallet_id, function (Wallet $wallet) use ($holdId) {
             $hold = WalletHold::query()->lockForUpdate()->findOrFail($holdId);
+
+            // Releasing is a no-op, not a conflict, on retry - it's the
+            // terminal state matching what the caller asked for. Only a
+            // hold that was captured or expired in the meantime is a
+            // genuine invalid transition.
+            if ($hold->status === HoldStatus::RELEASED) {
+                return ['hold' => $hold, 'released' => false];
+            }
 
             if ($hold->status !== HoldStatus::ACTIVE) {
                 throw new InvalidAmountException('This hold is no longer active.');
@@ -38,11 +46,13 @@ final class ReleaseHoldAction
             $hold->released_at = Carbon::now();
             $hold->save();
 
-            return $hold;
+            return ['hold' => $hold, 'released' => true];
         });
 
-        event(new WalletHoldReleased($released));
+        if ($result['released']) {
+            event(new WalletHoldReleased($result['hold']));
+        }
 
-        return $released;
+        return $result['hold'];
     }
 }

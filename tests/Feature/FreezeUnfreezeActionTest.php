@@ -7,6 +7,7 @@ namespace Highvertical\Wallet\Tests\Feature;
 use Highvertical\Wallet\Application\WalletManager;
 use Highvertical\Wallet\Domain\Data\DepositData;
 use Highvertical\Wallet\Domain\Enums\WalletStatus;
+use Highvertical\Wallet\Domain\Exceptions\WalletNotUsableException;
 use Highvertical\Wallet\Domain\ValueObjects\Money;
 use Highvertical\Wallet\Events\WalletFrozen;
 use Highvertical\Wallet\Events\WalletUnfrozen;
@@ -52,5 +53,34 @@ final class FreezeUnfreezeActionTest extends TestCase
         $this->assertNull($unfrozen->frozen_at);
         $this->assertNull($unfrozen->frozen_by);
         Event::assertDispatched(WalletUnfrozen::class);
+    }
+
+    public function test_unfreezing_an_already_active_wallet_is_an_idempotent_no_op(): void
+    {
+        Event::fake([WalletUnfrozen::class]);
+
+        $manager = $this->app->make(WalletManager::class);
+        $user = TestUser::create(['name' => 'Alice']);
+        $manager->deposit(new DepositData(holder: $user, amount: Money::fromDecimal('100.00', 'NGN')));
+        $wallet = Wallet::query()->firstOrFail();
+
+        $unfrozen = $manager->unfreeze($wallet->getKey());
+
+        $this->assertSame(WalletStatus::ACTIVE, $unfrozen->status);
+        Event::assertNotDispatched(WalletUnfrozen::class);
+    }
+
+    public function test_unfreezing_an_inactive_wallet_is_rejected(): void
+    {
+        $manager = $this->app->make(WalletManager::class);
+        $user = TestUser::create(['name' => 'Alice']);
+        $manager->deposit(new DepositData(holder: $user, amount: Money::fromDecimal('100.00', 'NGN')));
+        $wallet = Wallet::query()->firstOrFail();
+        $wallet->status = WalletStatus::INACTIVE;
+        $wallet->save();
+
+        $this->expectException(WalletNotUsableException::class);
+
+        $manager->unfreeze($wallet->getKey());
     }
 }

@@ -15,7 +15,7 @@ final class CaptureHoldRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'amount' => ['sometimes', 'nullable', 'regex:/^\d+(\.\d+)?$/'],
+            'amount' => ['sometimes', 'nullable', 'string', 'max:32', 'regex:/^\d+(\.\d+)?$/'],
         ];
     }
 }

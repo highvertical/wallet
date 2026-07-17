@@ -6,16 +6,19 @@ namespace Highvertical\Wallet\Listeners;
 
 use Highvertical\Wallet\Events\LowBalanceDetected;
 use Highvertical\Wallet\Events\TransactionReversed;
+use Highvertical\Wallet\Events\WalletBalanceReconciled;
 use Highvertical\Wallet\Events\WalletCredited;
 use Highvertical\Wallet\Events\WalletDebited;
 use Highvertical\Wallet\Events\WalletFrozen;
 use Highvertical\Wallet\Events\WalletHoldCaptured;
+use Highvertical\Wallet\Events\WalletHoldExpired;
 use Highvertical\Wallet\Events\WalletHoldPlaced;
 use Highvertical\Wallet\Events\WalletHoldReleased;
 use Highvertical\Wallet\Events\WalletTransferred;
 use Highvertical\Wallet\Events\WalletUnfrozen;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 /**
  * Registered against every wallet domain event (see WalletServiceProvider).
@@ -26,10 +29,26 @@ use Illuminate\Support\Facades\Log;
  */
 final class RecordAuditLog implements ShouldQueue
 {
+    public int $tries = 3;
+
     public function handle(object $event): void
     {
         Log::channel((string) config('wallet.audit_log_channel', 'stack'))
             ->info('wallet.'.$this->action($event), $this->context($event));
+    }
+
+    /**
+     * A lost audit-log entry is not recoverable after retries are exhausted,
+     * so at minimum surface it loudly on the default log channel rather than
+     * letting the queue swallow it silently.
+     */
+    public function failed(object $event, Throwable $exception): void
+    {
+        Log::error('wallet.audit_log_failed', [
+            'action' => $this->action($event),
+            'context' => $this->context($event),
+            'exception' => $exception->getMessage(),
+        ]);
     }
 
     private function action(object $event): string
@@ -44,7 +63,9 @@ final class RecordAuditLog implements ShouldQueue
             $event instanceof WalletHoldPlaced => 'hold_placed',
             $event instanceof WalletHoldReleased => 'hold_released',
             $event instanceof WalletHoldCaptured => 'hold_captured',
+            $event instanceof WalletHoldExpired => 'hold_expired',
             $event instanceof TransactionReversed => 'transaction_reversed',
+            $event instanceof WalletBalanceReconciled => 'balance_reconciled',
             default => 'unknown',
         };
     }
@@ -84,7 +105,7 @@ final class RecordAuditLog implements ShouldQueue
                 'balance' => $event->wallet->balance,
                 'max_balance' => $event->wallet->max_balance,
             ],
-            $event instanceof WalletHoldPlaced, $event instanceof WalletHoldReleased => [
+            $event instanceof WalletHoldPlaced, $event instanceof WalletHoldReleased, $event instanceof WalletHoldExpired => [
                 'hold_uuid' => $event->hold->uuid,
                 'wallet_id' => $event->hold->wallet_id,
                 'amount' => $event->hold->amount,
@@ -102,6 +123,11 @@ final class RecordAuditLog implements ShouldQueue
                 'original_transaction_uuid' => $event->original->uuid,
                 'reversal_transaction_uuid' => $event->reversal->uuid,
                 'amount' => $event->reversal->amount,
+            ],
+            $event instanceof WalletBalanceReconciled => [
+                'wallet_id' => $event->wallet->id,
+                'previous_balance' => $event->previousBalance,
+                'new_balance' => $event->newBalance,
             ],
             default => [],
         };

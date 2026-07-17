@@ -18,7 +18,8 @@ final class TransferData
         public ?string $note = null,
         public array $meta = [],
         public ?int $initiatedBy = null,
-        public ?string $initiatedIp = null
+        public ?string $initiatedIp = null,
+        public ?string $recipientCurrency = null
     ) {
     }
 }

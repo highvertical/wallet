@@ -30,13 +30,15 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  */
 final class TransactionController extends Controller
 {
+    private const MAX_PER_PAGE = 100;
+
     public function __construct(private WalletManager $wallet)
     {
     }
 
-    public function deposit(DepositRequest $request): WalletTransactionResource
+    public function deposit(DepositRequest $request): JsonResponse
     {
-        $transaction = $this->wallet->deposit(new DepositData(
+        $result = $this->wallet->deposit(new DepositData(
             holder: $request->user(),
             amount: Money::fromDecimal((string) $request->input('amount'), $this->currency($request)),
             walletName: (string) $request->input('wallet_name', 'default'),
@@ -47,7 +49,10 @@ final class TransactionController extends Controller
             initiatedIp: $request->ip()
         ));
 
-        return new WalletTransactionResource($transaction);
+        return response()->json([
+            'transaction' => new WalletTransactionResource($result['transaction']),
+            'fee_transaction' => $result['fee_transaction'] ? new WalletTransactionResource($result['fee_transaction']) : null,
+        ], 201);
     }
 
     public function withdraw(WithdrawRequest $request): JsonResponse
@@ -92,7 +97,8 @@ final class TransactionController extends Controller
             note: $request->input('note'),
             meta: (array) $request->input('meta', []),
             initiatedBy: $request->user()->getAuthIdentifier(),
-            initiatedIp: $request->ip()
+            initiatedIp: $request->ip(),
+            recipientCurrency: $request->input('recipient_currency')
         ));
 
         return response()->json([
@@ -105,11 +111,13 @@ final class TransactionController extends Controller
 
     public function index(Request $request): AnonymousResourceCollection
     {
+        $perPage = min(max((int) $request->input('per_page', 25), 1), self::MAX_PER_PAGE);
+
         $transactions = WalletTransaction::query()
             ->with('wallet')
             ->whereHas('wallet', $this->ownWalletScope($request))
             ->latest()
-            ->paginate((int) $request->input('per_page', 25));
+            ->paginate($perPage);
 
         return WalletTransactionResource::collection($transactions);
     }
@@ -121,15 +129,17 @@ final class TransactionController extends Controller
 
     public function export(Request $request): StreamedResponse
     {
-        $transactions = WalletTransaction::query()
-            ->with('wallet')
-            ->whereHas('wallet', $this->ownWalletScope($request))
-            ->latest()
-            ->get();
+        $ownWalletScope = $this->ownWalletScope($request);
 
-        return response()->streamDownload(function () use ($transactions) {
+        return response()->streamDownload(function () use ($ownWalletScope) {
             $handle = fopen('php://output', 'wb');
             fputcsv($handle, ['uuid', 'type', 'category', 'amount', 'currency', 'balance_after', 'reference', 'status', 'created_at']);
+
+            $transactions = WalletTransaction::query()
+                ->with('wallet')
+                ->whereHas('wallet', $ownWalletScope)
+                ->latest()
+                ->lazy(500);
 
             foreach ($transactions as $transaction) {
                 $currency = $transaction->wallet->currency;

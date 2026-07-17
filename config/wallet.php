@@ -17,6 +17,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | API version prefix
+    |--------------------------------------------------------------------------
+    |
+    | Prepended to every route in routes/api.php (e.g. "v1" -> /v1/wallet/...).
+    | Set to an empty string to keep routes unversioned, e.g. for an existing
+    | integration built against unversioned paths before this was introduced.
+    |
+    */
+    'api_version_prefix' => env('WALLET_API_VERSION_PREFIX', 'v1'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Default currency
     |--------------------------------------------------------------------------
     |
@@ -40,6 +52,29 @@ return [
         'GBP' => ['decimal_places' => 2],
         'EUR' => ['decimal_places' => 2],
         'JPY' => ['decimal_places' => 0],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Currency exchange
+    |--------------------------------------------------------------------------
+    |
+    | Automated conversion for cross-currency transfers (deposits/withdrawals
+    | stay single-currency). Read by the default HttpExchangeRateProvider;
+    | bind a custom ExchangeRateProvider to use a different source. The rate
+    | is fetched (and cached) before any wallet row lock is taken. Disabling
+    | restores the pre-conversion behaviour of rejecting any transfer whose
+    | sender/recipient wallets differ in currency.
+    |
+    */
+    'exchange' => [
+        'enabled' => (bool) env('WALLET_EXCHANGE_ENABLED', true),
+        'endpoint' => env('WALLET_EXCHANGE_ENDPOINT', 'https://open.er-api.com/v6/latest/{from}'),
+        'response_path' => env('WALLET_EXCHANGE_RESPONSE_PATH', 'rates.{to}'),
+        'api_key' => env('WALLET_EXCHANGE_API_KEY'),
+        'api_key_query_param' => env('WALLET_EXCHANGE_API_KEY_PARAM', 'access_key'),
+        'cache_ttl_seconds' => (int) env('WALLET_EXCHANGE_CACHE_TTL', 3600),
+        'timeout_seconds' => (int) env('WALLET_EXCHANGE_TIMEOUT', 5),
     ],
 
     /*
@@ -181,6 +216,7 @@ return [
         'wallet.adjust-balance',
         'wallet.place-hold',
         'wallet.release-hold',
+        'wallet.capture-hold',
         'wallet.reverse-transaction',
     ],
 
@@ -217,6 +253,7 @@ return [
             'wallet.adjust-balance',
             'wallet.place-hold',
             'wallet.release-hold',
+            'wallet.capture-hold',
             'wallet.reverse-transaction',
         ],
     ],

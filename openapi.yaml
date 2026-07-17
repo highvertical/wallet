@@ -1,0 +1,629 @@
+openapi: 3.0.3
+info:
+  title: Highvertical Wallet API
+  description: >
+    HTTP surface exposed by the highvertical/wallet package. Self-service
+    routes (`/v1/wallet/*`) always act on the authenticated user's own
+    wallet(s); admin routes (`/v1/wallet/admin/*`) act on any wallet by id
+    and are gated by flat `wallet.*` permissions (see WalletPolicy). The
+    `v1` prefix is configurable via `config('wallet.api_version_prefix')`
+    and can be set to an empty string for pre-existing unversioned
+    integrations.
+  version: "1.0"
+servers:
+  - url: /v1/wallet
+    description: Default versioned prefix (config('wallet.api_version_prefix') = "v1")
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Self-service
+    description: Acts on the authenticated user's own wallet(s)
+  - name: Admin
+    description: Requires an explicit wallet.* permission; acts on any wallet by id
+
+paths:
+  /:
+    get:
+      tags: [Self-service]
+      summary: List the authenticated user's wallets
+      security: [{ bearerAuth: [wallet.view-own] }]
+      responses:
+        '200':
+          description: List of wallets
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/Wallet' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /deposit:
+    post:
+      tags: [Self-service]
+      summary: Deposit funds into the authenticated user's own wallet
+      security: [{ bearerAuth: [wallet.deposit] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DepositRequest' }
+      responses:
+        '201':
+          description: Deposit recorded
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TransactionWithFeeResponse' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '423': { $ref: '#/components/responses/WalletNotUsable' }
+        '429': { $ref: '#/components/responses/LimitExceeded' }
+
+  /withdraw:
+    post:
+      tags: [Self-service]
+      summary: Withdraw funds from the authenticated user's own wallet
+      security: [{ bearerAuth: [wallet.withdraw] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/WithdrawRequest' }
+      responses:
+        '200':
+          description: Withdrawal recorded
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TransactionWithFeeResponse' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '402': { $ref: '#/components/responses/InsufficientFunds' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '423': { $ref: '#/components/responses/WalletNotUsable' }
+        '429': { $ref: '#/components/responses/LimitExceeded' }
+
+  /transfer:
+    post:
+      tags: [Self-service]
+      summary: Transfer funds from the authenticated user's wallet to another holder's wallet
+      security: [{ bearerAuth: [wallet.transfer] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/TransferRequest' }
+      responses:
+        '200':
+          description: Transfer recorded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  transfer: { $ref: '#/components/schemas/WalletTransfer' }
+                  debit_transaction: { $ref: '#/components/schemas/WalletTransaction' }
+                  credit_transaction: { $ref: '#/components/schemas/WalletTransaction' }
+                  fee_transaction:
+                    oneOf:
+                      - { $ref: '#/components/schemas/WalletTransaction' }
+                      - { type: 'null' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '402': { $ref: '#/components/responses/InsufficientFunds' }
+        '422':
+          description: >-
+            Validation failure, an unregistered recipient_type morph alias,
+            or CurrencyMismatchException (recipient has no eligible wallet,
+            or has wallets in multiple currencies and no recipient_currency
+            was given)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ValidationErrorBody' }
+        '423': { $ref: '#/components/responses/WalletNotUsable' }
+        '429': { $ref: '#/components/responses/LimitExceeded' }
+        '503': { $ref: '#/components/responses/ExchangeRateUnavailable' }
+
+  /transactions:
+    get:
+      tags: [Self-service]
+      summary: List the authenticated user's own transaction history
+      security: [{ bearerAuth: [wallet.view-transactions] }]
+      parameters:
+        - name: per_page
+          in: query
+          description: Clamped server-side to the range [1, 100] regardless of the requested value.
+          schema: { type: integer, default: 25, minimum: 1, maximum: 100 }
+      responses:
+        '200':
+          description: Paginated transaction list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/WalletTransaction' }
+                  meta:
+                    type: object
+                    properties:
+                      per_page: { type: integer, example: 25 }
+                      current_page: { type: integer, example: 1 }
+                      total: { type: integer, example: 42 }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /transactions/{transaction}:
+    get:
+      tags: [Self-service]
+      summary: Show a single transaction, scoped to its owning holder
+      description: >
+        Instance-scoped via the `can:view,transaction` route middleware +
+        WalletTransactionPolicy (owner or wallet.view-all), not a flat
+        permission.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/TransactionId'
+      responses:
+        '200':
+          description: Transaction detail
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/WalletTransaction' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /transactions-export:
+    get:
+      tags: [Self-service]
+      summary: Stream a CSV export of the authenticated user's own transactions
+      security: [{ bearerAuth: [wallet.export-report] }]
+      responses:
+        '200':
+          description: CSV stream (columns uuid, type, category, amount, currency, balance_after, reference, status, created_at)
+          content:
+            text/csv:
+              schema: { type: string, format: binary }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /admin/wallets/{wallet}:
+    get:
+      tags: [Admin]
+      summary: Show any wallet by id
+      description: >
+        Instance-scoped via the `can:view,wallet` route middleware +
+        WalletPolicy (owner or wallet.view-all) - the only admin route that
+        isn't a flat permission check.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/WalletId'
+      responses:
+        '200':
+          description: Wallet detail
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Wallet' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /admin/wallets/{wallet}/freeze:
+    post:
+      tags: [Admin]
+      summary: Freeze a wallet, blocking further deposits/withdrawals/transfers/holds
+      security: [{ bearerAuth: [wallet.freeze] }]
+      parameters:
+        - $ref: '#/components/parameters/WalletId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason: { type: string, maxLength: 500 }
+      responses:
+        '200':
+          description: Wallet frozen
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Wallet' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /admin/wallets/{wallet}/unfreeze:
+    post:
+      tags: [Admin]
+      summary: Unfreeze a wallet
+      description: Idempotent no-op (200, unchanged wallet) if the wallet is already active.
+      security: [{ bearerAuth: [wallet.unfreeze] }]
+      parameters:
+        - $ref: '#/components/parameters/WalletId'
+      responses:
+        '200':
+          description: Wallet unfrozen (or already active)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Wallet' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /admin/wallets/{wallet}/adjust:
+    post:
+      tags: [Admin]
+      summary: Post a manual credit or debit adjustment to a wallet
+      description: Amount may be signed; a positive amount records as a credit, negative as a debit. Zero is rejected.
+      security: [{ bearerAuth: [wallet.adjust-balance] }]
+      parameters:
+        - $ref: '#/components/parameters/WalletId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [amount, reason]
+              properties:
+                amount: { type: string, example: "50.00", description: "Signed decimal string, max 32 chars, matches ^-?\\d+(\\.\\d+)?$" }
+                reason: { type: string, maxLength: 500 }
+                reference: { type: string, maxLength: 255 }
+                meta: { $ref: '#/components/schemas/Meta' }
+      responses:
+        '201':
+          description: Adjustment recorded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/WalletTransaction' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '402': { $ref: '#/components/responses/InsufficientFunds' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '423': { $ref: '#/components/responses/WalletNotUsable' }
+
+  /admin/wallets/{wallet}/holds:
+    post:
+      tags: [Admin]
+      summary: Place a hold against a wallet's available balance
+      security: [{ bearerAuth: [wallet.place-hold] }]
+      parameters:
+        - $ref: '#/components/parameters/WalletId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [amount, reason]
+              properties:
+                amount: { type: string, example: "200.00", description: "Unsigned decimal string, max 32 chars" }
+                reason: { type: string, maxLength: 500 }
+                expires_after_hours: { type: integer, minimum: 1, description: "Defaults to config('wallet.hold_default_ttl_hours')" }
+                reference: { type: string, maxLength: 255 }
+      responses:
+        '201':
+          description: Hold placed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/WalletHold' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '402': { $ref: '#/components/responses/InsufficientFunds' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '423': { $ref: '#/components/responses/WalletNotUsable' }
+
+  /admin/holds/{hold}/release:
+    post:
+      tags: [Admin]
+      summary: Release a hold without capturing funds
+      description: >
+        Kept as a permission distinct from wallet.capture-hold so a role can
+        be granted the reversible, funds-preserving release ability without
+        also being able to capture funds from a hold.
+      security: [{ bearerAuth: [wallet.release-hold] }]
+      parameters:
+        - $ref: '#/components/parameters/HoldId'
+      responses:
+        '200':
+          description: Hold released (idempotent replay of an already-released hold returns the same result)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/WalletHold' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /admin/holds/{hold}/capture:
+    post:
+      tags: [Admin]
+      summary: Capture all or part of a held amount, debiting the wallet
+      security: [{ bearerAuth: [wallet.capture-hold] }]
+      parameters:
+        - $ref: '#/components/parameters/HoldId'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                amount: { type: string, nullable: true, description: "Omit to capture the hold's full held amount" }
+      responses:
+        '200':
+          description: Hold captured
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  hold: { $ref: '#/components/schemas/WalletHold' }
+                  transaction: { $ref: '#/components/schemas/WalletTransaction' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /admin/transactions/{transaction}/reverse:
+    post:
+      tags: [Admin]
+      summary: Reverse a transaction, posting an equal and opposite entry
+      security: [{ bearerAuth: [wallet.reverse-transaction] }]
+      parameters:
+        - $ref: '#/components/parameters/TransactionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason: { type: string, maxLength: 500 }
+      responses:
+        '201':
+          description: Reversal transaction recorded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/WalletTransaction' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: >
+        Guard is configurable via config('wallet.auth_guard') (default:
+        sanctum). Scopes listed per-operation are Spatie permission names
+        seeded by WalletPermissionSeeder, not OAuth scopes.
+
+  parameters:
+    WalletId:
+      name: wallet
+      in: path
+      required: true
+      schema: { type: integer }
+    HoldId:
+      name: hold
+      in: path
+      required: true
+      schema: { type: integer }
+    TransactionId:
+      name: transaction
+      in: path
+      required: true
+      schema: { type: integer }
+
+  schemas:
+    Meta:
+      type: object
+      description: Arbitrary key/value payload stored verbatim on the transaction ledger. Capped at 50 keys and 8192 bytes when JSON-encoded.
+      maxProperties: 50
+      additionalProperties: true
+
+    DepositRequest:
+      type: object
+      required: [amount]
+      properties:
+        amount: { type: string, example: "100.00", description: "Unsigned decimal string, max 32 chars, matches ^\\d+(\\.\\d+)?$" }
+        currency: { type: string, minLength: 3, maxLength: 3, example: "NGN", description: "Must be a key in config('wallet.currencies'); defaults to config('wallet.default_currency')" }
+        wallet_name: { type: string, maxLength: 255, default: "default" }
+        reference: { type: string, maxLength: 255 }
+        description: { type: string, maxLength: 500, nullable: true }
+        meta: { $ref: '#/components/schemas/Meta' }
+
+    WithdrawRequest:
+      allOf:
+        - $ref: '#/components/schemas/DepositRequest'
+
+    TransferRequest:
+      type: object
+      required: [recipient_id, amount]
+      properties:
+        recipient_id: { description: "Primary key of the recipient holder model" }
+        recipient_type: { type: string, maxLength: 255, description: "Morph-map alias; defaults to the authenticated user's own class. Rejected with 422 if not a registered morph alias." }
+        amount: { type: string, example: "100.00" }
+        currency: { type: string, minLength: 3, maxLength: 3 }
+        recipient_currency: { type: string, minLength: 3, maxLength: 3, description: "Disambiguates which of the recipient's wallets to credit when they hold more than one currency under wallet_name. Ignored if the recipient has a wallet matching the sender's currency exactly." }
+        wallet_name: { type: string, maxLength: 255, default: "default" }
+        note: { type: string, maxLength: 500, nullable: true }
+        meta: { $ref: '#/components/schemas/Meta' }
+
+    Wallet:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        currency: { type: string, example: "NGN" }
+        balance: { type: string, example: "1000.00", description: "Decimal display string; minor units are never exposed over HTTP" }
+        held: { type: string, example: "200.00", description: "Sum of active holds" }
+        available_balance: { type: string, example: "800.00", description: "balance - held" }
+        min_balance: { type: string, nullable: true }
+        max_balance: { type: string, nullable: true }
+        status: { type: string, enum: [active, frozen] }
+        low_balance_alert: { type: boolean }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    WalletTransaction:
+      type: object
+      properties:
+        id: { type: integer }
+        uuid: { type: string, format: uuid }
+        wallet_id: { type: integer }
+        type: { type: string, enum: [credit, debit] }
+        category: { type: string, example: "deposit" }
+        currency: { type: string }
+        amount: { type: string, example: "100.00" }
+        balance_before: { type: string }
+        balance_after: { type: string }
+        reference: { type: string, nullable: true }
+        description: { type: string, nullable: true }
+        status: { type: string, example: "completed" }
+        meta: { type: object, nullable: true }
+        created_at: { type: string, format: date-time }
+
+    TransactionWithFeeResponse:
+      type: object
+      properties:
+        transaction: { $ref: '#/components/schemas/WalletTransaction' }
+        fee_transaction:
+          oneOf:
+            - { $ref: '#/components/schemas/WalletTransaction' }
+            - { type: 'null' }
+          description: Populated only when config('wallet.fees') resolves a non-zero fee for this operation.
+
+    WalletTransfer:
+      type: object
+      properties:
+        id: { type: integer }
+        uuid: { type: string, format: uuid }
+        from_wallet_id: { type: integer }
+        to_wallet_id: { type: integer }
+        currency: { type: string, description: "Sender wallet's currency" }
+        to_currency: { type: string, description: "Recipient wallet's currency" }
+        amount: { type: string, description: "Amount debited from the sender, in currency" }
+        fee: { type: string }
+        exchange_rate:
+          type: string
+          nullable: true
+          example: "1500.0050000000"
+          description: "Multiplier from currency to to_currency. null for a same-currency transfer."
+        converted_amount:
+          type: string
+          nullable: true
+          example: "150000.50"
+          description: "Amount credited to the recipient, in to_currency. null for a same-currency transfer."
+        note: { type: string, nullable: true }
+        created_at: { type: string, format: date-time }
+
+    WalletHold:
+      type: object
+      properties:
+        id: { type: integer }
+        uuid: { type: string, format: uuid }
+        wallet_id: { type: integer }
+        currency: { type: string }
+        amount: { type: string }
+        reason: { type: string }
+        status: { type: string, enum: [active, released, captured, expired] }
+        expires_at: { type: string, format: date-time, nullable: true }
+        released_at: { type: string, format: date-time, nullable: true }
+        created_at: { type: string, format: date-time }
+
+    ValidationErrorBody:
+      type: object
+      properties:
+        message: { type: string, example: "The amount field is required." }
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items: { type: string }
+
+    ErrorMessage:
+      type: object
+      properties:
+        message: { type: string }
+
+  responses:
+    Unauthenticated:
+      description: No authenticated user for config('wallet.auth_guard')
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorMessage' }
+    Forbidden:
+      description: Authenticated but missing the required wallet.* permission (or, for instance-scoped routes, not the owner and missing wallet.view-all)
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorMessage' }
+    NotFound:
+      description: No wallet/hold/transaction with that id
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorMessage' }
+    ValidationError:
+      description: Request failed Form Request validation
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ValidationErrorBody' }
+    InsufficientFunds:
+      description: InsufficientFundsException - available balance (after holds) is below the requested amount
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorMessage' }
+    WalletNotUsable:
+      description: WalletNotUsableException - the wallet is frozen
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorMessage' }
+    ExchangeRateUnavailable:
+      description: ExchangeRateUnavailableException - the exchange rate provider could not resolve a rate for a cross-currency transfer
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorMessage' }
+    LimitExceeded:
+      description: LimitExceededException - a config('wallet.limits') daily/monthly cap was exceeded
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorMessage' }

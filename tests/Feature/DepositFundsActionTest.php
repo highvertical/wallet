@@ -8,6 +8,7 @@ use Highvertical\Wallet\Application\WalletManager;
 use Highvertical\Wallet\Domain\Data\DepositData;
 use Highvertical\Wallet\Domain\Enums\TransactionCategory;
 use Highvertical\Wallet\Domain\Enums\TransactionType;
+use Highvertical\Wallet\Domain\Exceptions\InsufficientFundsException;
 use Highvertical\Wallet\Domain\Exceptions\InvalidAmountException;
 use Highvertical\Wallet\Domain\Exceptions\WalletNotUsableException;
 use Highvertical\Wallet\Domain\ValueObjects\Money;
@@ -26,10 +27,11 @@ final class DepositFundsActionTest extends TestCase
         $user = TestUser::create(['name' => 'Alice']);
         $manager = $this->app->make(WalletManager::class);
 
-        $transaction = $manager->deposit(new DepositData(
+        $result = $manager->deposit(new DepositData(
             holder: $user,
             amount: Money::fromDecimal('1500.00', 'NGN'),
         ));
+        $transaction = $result['transaction'];
 
         $wallet = Wallet::query()->firstOrFail();
         $this->assertSame(150000, $wallet->balance);
@@ -97,7 +99,47 @@ final class DepositFundsActionTest extends TestCase
             reference: 'dep-fixed-ref',
         ));
 
-        $this->assertSame($first->getKey(), $second->getKey());
+        $this->assertSame($first['transaction']->getKey(), $second['transaction']->getKey());
         $this->assertSame(10000, Wallet::query()->firstOrFail()->balance);
+    }
+
+    public function test_a_configured_deposit_fee_is_charged_as_a_separate_transaction(): void
+    {
+        config(['wallet.fees.deposit' => ['type' => 'flat', 'value' => 100, 'min' => null, 'cap' => null]]);
+
+        $user = TestUser::create(['name' => 'Alice']);
+        $manager = $this->app->make(WalletManager::class);
+
+        $result = $manager->deposit(new DepositData(holder: $user, amount: Money::fromDecimal('100.00', 'NGN')));
+
+        $this->assertSame(10000, $result['transaction']->amount);
+        $this->assertNotNull($result['fee_transaction']);
+        $this->assertSame(TransactionType::DEBIT, $result['fee_transaction']->type);
+        $this->assertSame(TransactionCategory::FEE, $result['fee_transaction']->category);
+        $this->assertSame(100, $result['fee_transaction']->amount);
+        $this->assertSame(9900, Wallet::query()->firstOrFail()->balance);
+    }
+
+    public function test_no_fee_transaction_is_created_when_the_deposit_fee_is_zero(): void
+    {
+        $user = TestUser::create(['name' => 'Alice']);
+        $manager = $this->app->make(WalletManager::class);
+
+        $result = $manager->deposit(new DepositData(holder: $user, amount: Money::fromDecimal('100.00', 'NGN')));
+
+        $this->assertNull($result['fee_transaction']);
+        $this->assertSame(10000, Wallet::query()->firstOrFail()->balance);
+    }
+
+    public function test_deposit_is_rejected_when_the_fee_would_drop_the_wallet_below_its_minimum_balance(): void
+    {
+        config(['wallet.fees.deposit' => ['type' => 'flat', 'value' => 20000, 'min' => null, 'cap' => null]]);
+
+        $user = TestUser::create(['name' => 'Alice']);
+        $manager = $this->app->make(WalletManager::class);
+
+        $this->expectException(InsufficientFundsException::class);
+
+        $manager->deposit(new DepositData(holder: $user, amount: Money::fromDecimal('100.00', 'NGN')));
     }
 }

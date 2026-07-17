@@ -10,7 +10,6 @@ use Highvertical\Wallet\Application\Services\WalletLocker;
 use Highvertical\Wallet\Domain\Contracts\Walletable;
 use Highvertical\Wallet\Domain\Contracts\WalletRepository;
 use Highvertical\Wallet\Domain\Data\WithdrawData;
-use Highvertical\Wallet\Domain\Enums\HoldStatus;
 use Highvertical\Wallet\Domain\Enums\TransactionCategory;
 use Highvertical\Wallet\Domain\Enums\TransactionStatus;
 use Highvertical\Wallet\Domain\Enums\TransactionType;
@@ -86,7 +85,7 @@ final class WithdrawFundsAction
 
             $heldMinorUnits = (int) WalletHold::query()
                 ->where('wallet_id', $wallet->getKey())
-                ->where('status', HoldStatus::ACTIVE)
+                ->active()
                 ->sum('amount');
 
             $availableBalance = $wallet->balance - $heldMinorUnits;

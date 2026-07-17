@@ -41,8 +41,18 @@ final class Money
      * fractional digits than the currency allows, using string arithmetic
      * only - no float ever touches the value.
      */
+    /**
+     * Total normalized digits (whole + fractional) allowed in a decimal
+     * amount. Chosen to leave large headroom below PHP_INT_MAX (~9.2e18) so
+     * repeated additions across many transactions can never silently
+     * overflow, while comfortably exceeding any realistic wallet balance.
+     */
+    private const MAX_TOTAL_DIGITS = 15;
+
     public static function fromDecimal(string $amount, string $currency): self
     {
+        self::assertConfiguredCurrency($currency);
+
         if (! preg_match('/^-?\d+(\.\d+)?$/', $amount)) {
             throw new InvalidAmountException(sprintf('"%s" is not a valid decimal amount.', $amount));
         }
@@ -59,6 +69,18 @@ final class Money
                 $amount,
                 strtoupper($currency),
                 $decimalPlaces
+            ));
+        }
+
+        $normalizedWhole = ltrim($whole, '0');
+        $normalizedWhole = $normalizedWhole === '' ? '0' : $normalizedWhole;
+        $totalDigits = strlen($normalizedWhole) + $decimalPlaces;
+
+        if ($totalDigits > self::MAX_TOTAL_DIGITS) {
+            throw new InvalidAmountException(sprintf(
+                '"%s" has too many digits (maximum %d).',
+                $amount,
+                self::MAX_TOTAL_DIGITS
             ));
         }
 
@@ -141,6 +163,33 @@ final class Money
         return $this->currency === $other->currency;
     }
 
+    /**
+     * Converts this amount into $targetCurrency using $rate (a positive
+     * decimal string, multiplier from this currency to the target). Rounds
+     * half-up to the target currency's configured decimal places using
+     * bcmath only - no float ever touches the value - then delegates to
+     * fromDecimal() so the existing digit-cap/currency-whitelist validation
+     * applies uniformly rather than via a parallel bypass.
+     */
+    public function convertTo(string $targetCurrency, string $rate): self
+    {
+        if (bccomp($rate, '0', 10) <= 0) {
+            throw new InvalidAmountException(sprintf('"%s" is not a valid positive exchange rate.', $rate));
+        }
+
+        $targetPlaces = self::decimalPlacesFor($targetCurrency);
+        $product = bcmul($this->toDecimal(), $rate, $targetPlaces + 8);
+
+        return self::fromDecimal(self::roundHalfUp($product, $targetPlaces), $targetCurrency);
+    }
+
+    private static function roundHalfUp(string $decimal, int $places): string
+    {
+        $half = '0.'.str_repeat('0', $places).'5';
+
+        return $decimal[0] === '-' ? bcsub($decimal, $half, $places) : bcadd($decimal, $half, $places);
+    }
+
     public function toDecimal(): string
     {
         $decimalPlaces = self::decimalPlacesFor($this->currency);
@@ -161,6 +210,24 @@ final class Money
     private static function decimalPlacesFor(string $currency): int
     {
         return (int) config('wallet.currencies.'.strtoupper($currency).'.decimal_places', 2);
+    }
+
+    /**
+     * Only validated at the fromDecimal() entry point (new money created
+     * from a raw string) - not in the constructor/fromMinorUnits(), so that
+     * reconstructing Money from already-persisted data never throws just
+     * because a currency was later removed from config.
+     */
+    private static function assertConfiguredCurrency(string $currency): void
+    {
+        $configured = array_keys((array) config('wallet.currencies', []));
+
+        if ($configured !== [] && ! in_array(strtoupper($currency), $configured, true)) {
+            throw new CurrencyMismatchException(sprintf(
+                '"%s" is not a configured wallet currency.',
+                strtoupper($currency)
+            ));
+        }
     }
 
     private function assertSameCurrency(self $other): void

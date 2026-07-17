@@ -16,10 +16,11 @@ use Highvertical\Wallet\Infrastructure\Models\WalletHold;
 use Illuminate\Http\JsonResponse;
 
 /**
- * Admin: wallet.place-hold and wallet.release-hold are flat permissions
- * (see WalletPolicy docblock) enforced by route middleware in routes/api.php.
- * capture shares the release-hold permission since both are terminal,
- * admin-only transitions on a hold (see routes/api.php).
+ * Admin: wallet.place-hold, wallet.release-hold and wallet.capture-hold are
+ * flat permissions (see WalletPolicy docblock) enforced by route middleware
+ * in routes/api.php. release and capture are kept as distinct permissions
+ * so an admin role can be granted the (reversible, funds-preserving) ability
+ * to release a hold without also being able to capture funds from it.
  */
 final class HoldController extends Controller
 {
@@ -34,7 +35,8 @@ final class HoldController extends Controller
             Money::fromDecimal((string) $request->input('amount'), $wallet->currency),
             (string) $request->input('reason'),
             null,
-            $request->input('expires_after_hours') !== null ? (int) $request->input('expires_after_hours') : null
+            $request->input('expires_after_hours') !== null ? (int) $request->input('expires_after_hours') : null,
+            $request->input('reference')
         );
 
         return new WalletHoldResource($hold);

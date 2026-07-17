@@ -7,8 +7,10 @@ namespace Highvertical\Wallet\Application;
 use Highvertical\Wallet\Application\Actions\AdjustBalanceAction;
 use Highvertical\Wallet\Application\Actions\CaptureHoldAction;
 use Highvertical\Wallet\Application\Actions\DepositFundsAction;
+use Highvertical\Wallet\Application\Actions\ExpireHoldsAction;
 use Highvertical\Wallet\Application\Actions\FreezeWalletAction;
 use Highvertical\Wallet\Application\Actions\PlaceHoldAction;
+use Highvertical\Wallet\Application\Actions\ReconcileWalletLedgerAction;
 use Highvertical\Wallet\Application\Actions\ReleaseHoldAction;
 use Highvertical\Wallet\Application\Actions\ReverseTransactionAction;
 use Highvertical\Wallet\Application\Actions\TransferFundsAction;
@@ -40,11 +42,16 @@ final class WalletManager
         private ReverseTransactionAction $reverseTransaction,
         private FreezeWalletAction $freezeWallet,
         private UnfreezeWalletAction $unfreezeWallet,
-        private AdjustBalanceAction $adjustBalance
+        private AdjustBalanceAction $adjustBalance,
+        private ExpireHoldsAction $expireHolds,
+        private ReconcileWalletLedgerAction $reconcileWalletLedger
     ) {
     }
 
-    public function deposit(DepositData $data): WalletTransaction
+    /**
+     * @return array{transaction: WalletTransaction, fee_transaction: ?WalletTransaction}
+     */
+    public function deposit(DepositData $data): array
     {
         return $this->depositFunds->handle($data);
     }
@@ -70,9 +77,10 @@ final class WalletManager
         Money $amount,
         string $reason,
         ?Model $subject = null,
-        ?int $expiresAfterHours = null
+        ?int $expiresAfterHours = null,
+        ?string $reference = null
     ): WalletHold {
-        return $this->placeHold->handle($walletId, $amount, $reason, $subject, $expiresAfterHours);
+        return $this->placeHold->handle($walletId, $amount, $reason, $subject, $expiresAfterHours, $reference);
     }
 
     public function releaseHold(int $holdId): WalletHold
@@ -106,5 +114,18 @@ final class WalletManager
     public function adjustBalance(AdjustmentData $data): WalletTransaction
     {
         return $this->adjustBalance->handle($data);
+    }
+
+    public function expireHolds(): int
+    {
+        return $this->expireHolds->handle();
+    }
+
+    /**
+     * @return list<array{wallet_id: int, expected_balance: int, actual_balance: int, difference: int}>
+     */
+    public function reconcileLedger(?int $walletId = null, bool $fix = false): array
+    {
+        return $this->reconcileWalletLedger->handle($walletId, $fix);
     }
 }

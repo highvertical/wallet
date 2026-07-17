@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Highvertical\Wallet\Tests\Feature;
 
 use Highvertical\Wallet\Application\WalletManager;
+use Highvertical\Wallet\Domain\Contracts\ExchangeRateProvider;
 use Highvertical\Wallet\Domain\Contracts\WalletRepository;
 use Highvertical\Wallet\Domain\Data\DepositData;
 use Highvertical\Wallet\Domain\Data\TransferData;
@@ -15,12 +16,26 @@ use Highvertical\Wallet\Domain\Exceptions\InvalidAmountException;
 use Highvertical\Wallet\Domain\ValueObjects\Money;
 use Highvertical\Wallet\Events\WalletTransferred;
 use Highvertical\Wallet\Infrastructure\Models\Wallet;
+use Highvertical\Wallet\Tests\Support\FakeExchangeRateProvider;
 use Highvertical\Wallet\Tests\Support\TestUser;
 use Highvertical\Wallet\Tests\TestCase;
 use Illuminate\Support\Facades\Event;
 
 final class TransferFundsActionTest extends TestCase
 {
+    /**
+     * A fixed-rate double bound over the real HttpExchangeRateProvider so
+     * cross-currency tests never touch the network, and so calls can be
+     * counted to prove the provider is skipped for same-currency transfers.
+     */
+    private function bindFakeExchangeRateProvider(string $rate = '1500.00'): FakeExchangeRateProvider
+    {
+        $fake = new FakeExchangeRateProvider($rate);
+        $this->app->bind(ExchangeRateProvider::class, fn () => $fake);
+
+        return $fake;
+    }
+
     /**
      * Transfer's recipient-side lookup uses WalletRepository::find() (not
      * findOrCreate), so a recipient must already have a wallet in the
@@ -138,5 +153,117 @@ final class TransferFundsActionTest extends TestCase
 
         $this->assertSame($first['transfer']->getKey(), $second['transfer']->getKey());
         $this->assertSame(90000, $sender->wallet()->fresh()->balance);
+    }
+
+    public function test_it_converts_a_cross_currency_transfer_at_the_bound_rate(): void
+    {
+        $this->bindFakeExchangeRateProvider('1500.00');
+
+        $manager = $this->app->make(WalletManager::class);
+        $sender = TestUser::create(['name' => 'Alice']);
+        $recipient = TestUser::create(['name' => 'Bob']);
+        $manager->deposit(new DepositData(holder: $sender, amount: Money::fromDecimal('1000.00', 'USD')));
+        $this->givenWallet($recipient, 'NGN');
+
+        $result = $manager->transfer(new TransferData(
+            fromHolder: $sender,
+            toHolder: $recipient,
+            amount: Money::fromDecimal('10.00', 'USD'),
+        ));
+
+        // Sender debited in USD; recipient credited the converted NGN amount.
+        $this->assertSame(99000, $sender->wallet('default', 'USD')->fresh()->balance);
+        $this->assertSame(1500000, $recipient->wallet('default', 'NGN')->fresh()->balance);
+        $this->assertSame('1500.00', $result['transfer']->exchange_rate);
+        $this->assertSame(1500000, $result['transfer']->converted_amount);
+        $this->assertSame(1500000, $result['credit_transaction']->amount);
+        $this->assertSame(1000, $result['debit_transaction']->amount);
+    }
+
+    public function test_recipient_currency_disambiguates_a_multi_currency_recipient(): void
+    {
+        $this->bindFakeExchangeRateProvider('1500.00');
+
+        $manager = $this->app->make(WalletManager::class);
+        $sender = TestUser::create(['name' => 'Alice']);
+        $recipient = TestUser::create(['name' => 'Bob']);
+        $manager->deposit(new DepositData(holder: $sender, amount: Money::fromDecimal('1000.00', 'USD')));
+        $this->givenWallet($recipient, 'NGN');
+        $this->givenWallet($recipient, 'EUR');
+
+        $result = $manager->transfer(new TransferData(
+            fromHolder: $sender,
+            toHolder: $recipient,
+            amount: Money::fromDecimal('10.00', 'USD'),
+            recipientCurrency: 'NGN',
+        ));
+
+        $this->assertSame(1500000, $recipient->wallet('default', 'NGN')->fresh()->balance);
+        $this->assertSame(0, $recipient->wallet('default', 'EUR')->fresh()->balance);
+    }
+
+    public function test_it_rejects_an_ambiguous_recipient_without_recipient_currency(): void
+    {
+        $this->bindFakeExchangeRateProvider('1500.00');
+
+        $manager = $this->app->make(WalletManager::class);
+        $sender = TestUser::create(['name' => 'Alice']);
+        $recipient = TestUser::create(['name' => 'Bob']);
+        $manager->deposit(new DepositData(holder: $sender, amount: Money::fromDecimal('1000.00', 'USD')));
+        $this->givenWallet($recipient, 'NGN');
+        $this->givenWallet($recipient, 'EUR');
+
+        $this->expectException(CurrencyMismatchException::class);
+
+        $manager->transfer(new TransferData(
+            fromHolder: $sender,
+            toHolder: $recipient,
+            amount: Money::fromDecimal('10.00', 'USD'),
+        ));
+    }
+
+    public function test_disabling_exchange_restores_the_strict_currency_match_behaviour(): void
+    {
+        $fake = $this->bindFakeExchangeRateProvider('1500.00');
+        config(['wallet.exchange.enabled' => false]);
+
+        $manager = $this->app->make(WalletManager::class);
+        $sender = TestUser::create(['name' => 'Alice']);
+        $recipient = TestUser::create(['name' => 'Bob']);
+        $manager->deposit(new DepositData(holder: $sender, amount: Money::fromDecimal('1000.00', 'USD')));
+        $this->givenWallet($recipient, 'NGN');
+
+        $this->expectException(CurrencyMismatchException::class);
+
+        try {
+            $manager->transfer(new TransferData(
+                fromHolder: $sender,
+                toHolder: $recipient,
+                amount: Money::fromDecimal('10.00', 'USD'),
+            ));
+        } finally {
+            $this->assertSame(0, $fake->calls);
+        }
+    }
+
+    public function test_the_rate_provider_is_never_invoked_for_a_same_currency_transfer(): void
+    {
+        $fake = $this->bindFakeExchangeRateProvider('1500.00');
+
+        $manager = $this->app->make(WalletManager::class);
+        $sender = TestUser::create(['name' => 'Alice']);
+        $recipient = TestUser::create(['name' => 'Bob']);
+        $manager->deposit(new DepositData(holder: $sender, amount: Money::fromDecimal('1000.00', 'NGN')));
+        $this->givenWallet($recipient, 'NGN');
+
+        $result = $manager->transfer(new TransferData(
+            fromHolder: $sender,
+            toHolder: $recipient,
+            amount: Money::fromDecimal('300.00', 'NGN'),
+        ));
+
+        $this->assertSame(0, $fake->calls);
+        $this->assertNull($result['transfer']->exchange_rate);
+        $this->assertNull($result['transfer']->converted_amount);
     }
 }

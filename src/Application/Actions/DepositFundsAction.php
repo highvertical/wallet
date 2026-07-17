@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Highvertical\Wallet\Application\Actions;
 
+use Highvertical\Wallet\Application\Services\FeeResolver;
 use Highvertical\Wallet\Application\Services\LimitEnforcer;
 use Highvertical\Wallet\Application\Services\WalletLocker;
 use Highvertical\Wallet\Domain\Contracts\Walletable;
@@ -14,6 +15,7 @@ use Highvertical\Wallet\Domain\Enums\TransactionStatus;
 use Highvertical\Wallet\Domain\Enums\TransactionType;
 use Highvertical\Wallet\Domain\Enums\WalletOperation;
 use Highvertical\Wallet\Domain\Enums\WalletStatus;
+use Highvertical\Wallet\Domain\Exceptions\InsufficientFundsException;
 use Highvertical\Wallet\Domain\Exceptions\InvalidAmountException;
 use Highvertical\Wallet\Domain\Exceptions\WalletNotUsableException;
 use Highvertical\Wallet\Events\WalletCredited;
@@ -28,11 +30,15 @@ final class DepositFundsAction
     public function __construct(
         private WalletRepository $wallets,
         private WalletLocker $locker,
+        private FeeResolver $feeResolver,
         private LimitEnforcer $limitEnforcer
     ) {
     }
 
-    public function handle(DepositData $data): WalletTransaction
+    /**
+     * @return array{transaction: WalletTransaction, fee_transaction: ?WalletTransaction}
+     */
+    public function handle(DepositData $data): array
     {
         if (! $data->holder instanceof Walletable) {
             throw new InvalidArgumentException(sprintf(
@@ -54,25 +60,36 @@ final class DepositFundsAction
         );
 
         $reference = $data->reference ?? (string) Str::uuid();
+        $feeReference = $reference.'-fee';
 
         $existing = WalletTransaction::query()->where('reference', $reference)->first();
 
         if ($existing !== null) {
-            return $existing;
+            return [
+                'transaction' => $existing,
+                'fee_transaction' => WalletTransaction::query()->where('reference', $feeReference)->first(),
+            ];
         }
 
-        $transaction = $this->locker->lock($wallet->getKey(), function (Wallet $wallet) use ($data, $reference) {
+        $result = $this->locker->lock($wallet->getKey(), function (Wallet $wallet) use ($data, $reference, $feeReference) {
             if ($wallet->status !== WalletStatus::ACTIVE) {
                 throw new WalletNotUsableException('This wallet is not currently usable.');
             }
 
             $this->limitEnforcer->assertWithinLimit($wallet->getKey(), $data->amount, WalletOperation::DEPOSIT);
 
-            $balanceBefore = $wallet->balance;
-            $balanceAfter = $balanceBefore + $data->amount->minorUnits();
+            $fee = $this->feeResolver->resolve($data->amount, WalletOperation::DEPOSIT);
 
-            if ($wallet->max_balance !== null && $balanceAfter > $wallet->max_balance) {
+            $balanceBefore = $wallet->balance;
+            $balanceAfterAmount = $balanceBefore + $data->amount->minorUnits();
+            $finalBalance = $balanceAfterAmount - $fee->minorUnits();
+
+            if ($wallet->max_balance !== null && $balanceAfterAmount > $wallet->max_balance) {
                 throw new InvalidAmountException("This deposit would exceed the wallet's maximum balance.");
+            }
+
+            if ($fee->isPositive() && $finalBalance < ($wallet->min_balance ?? 0)) {
+                throw new InsufficientFundsException("This deposit's fee would drop the wallet below its minimum balance.");
             }
 
             $transaction = new WalletTransaction([
@@ -86,7 +103,7 @@ final class DepositFundsAction
                 'meta' => $data->meta,
             ]);
             $transaction->balance_before = $balanceBefore;
-            $transaction->balance_after = $balanceAfter;
+            $transaction->balance_after = $balanceAfterAmount;
             $transaction->initiated_by = $data->initiatedBy;
             $transaction->initiated_ip = $data->initiatedIp;
 
@@ -96,20 +113,45 @@ final class DepositFundsAction
                 $existing = WalletTransaction::query()->where('reference', $reference)->first();
 
                 if ($existing !== null) {
-                    return $existing;
+                    return [
+                        'transaction' => $existing,
+                        'fee_transaction' => WalletTransaction::query()->where('reference', $feeReference)->first(),
+                    ];
                 }
 
                 throw $exception;
             }
 
-            $wallet->balance = $balanceAfter;
+            $feeTransaction = null;
+
+            if ($fee->isPositive()) {
+                $feeTransaction = new WalletTransaction([
+                    'wallet_id' => $wallet->getKey(),
+                    'type' => TransactionType::DEBIT,
+                    'category' => TransactionCategory::FEE,
+                    'amount' => $fee->minorUnits(),
+                    'reference' => $feeReference,
+                    'status' => TransactionStatus::COMPLETED,
+                    'description' => 'Deposit fee',
+                ]);
+                $feeTransaction->balance_before = $balanceAfterAmount;
+                $feeTransaction->balance_after = $finalBalance;
+                $feeTransaction->initiated_by = $data->initiatedBy;
+                $feeTransaction->initiated_ip = $data->initiatedIp;
+                $feeTransaction->save();
+            }
+
+            $wallet->balance = $finalBalance;
             $wallet->save();
 
-            return $transaction;
+            return [
+                'transaction' => $transaction,
+                'fee_transaction' => $feeTransaction,
+            ];
         });
 
-        event(new WalletCredited($transaction));
+        event(new WalletCredited($result['transaction']));
 
-        return $transaction;
+        return $result;
     }
 }

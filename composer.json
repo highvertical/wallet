@@ -1,0 +1,58 @@
+{
+    "name": "highvertical/wallet",
+    "description": "A centralized, ledger-based multi-currency wallet engine for Laravel 8-13: deposits, withdrawals, transfers, holds, reversals, admin adjustments, and full audit trail.",
+    "type": "library",
+    "license": "MIT",
+    "homepage": "https://github.com/highvertical/wallet",
+    "support": {
+        "issues": "https://github.com/highvertical/wallet/issues",
+        "source": "https://github.com/highvertical/wallet"
+    },
+    "authors": [
+        {
+            "name": "Highvertical",
+            "email": "highverticaltechnologies@gmail.com"
+        }
+    ],
+    "keywords": ["laravel", "wallet", "ledger", "balance", "transactions"],
+    "require": {
+        "php": "^8.0",
+        "illuminate/support": "^8.0|^9.0|^10.0|^11.0|^12.0|^13.0",
+        "illuminate/database": "^8.0|^9.0|^10.0|^11.0|^12.0|^13.0",
+        "illuminate/http": "^8.0|^9.0|^10.0|^11.0|^12.0|^13.0",
+        "illuminate/events": "^8.0|^9.0|^10.0|^11.0|^12.0|^13.0",
+        "illuminate/notifications": "^8.0|^9.0|^10.0|^11.0|^12.0|^13.0",
+        "spatie/laravel-permission": "^5.0|^6.0|^7.0|^8.0"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^6.0|^7.0|^8.0|^9.0|^10.0",
+        "phpunit/phpunit": "^9.0|^10.0|^11.0",
+        "laravel/pint": "^1.0",
+        "nunomaduro/larastan": "^2.0|^3.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Highvertical\\Wallet\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Highvertical\\Wallet\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Highvertical\\Wallet\\Providers\\WalletServiceProvider"
+            ]
+        },
+        "branch-alias": {
+            "dev-main": "0.1.x-dev"
+        }
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
